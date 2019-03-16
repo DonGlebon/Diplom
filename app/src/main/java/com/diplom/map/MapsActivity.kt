@@ -10,6 +10,9 @@ import android.os.Bundle
 import android.support.v4.app.ActivityCompat
 import android.support.v4.content.ContextCompat
 import android.support.v7.app.AppCompatActivity
+import android.util.Log
+import android.view.Menu
+import android.view.MenuItem
 import com.bbn.openmap.dataAccess.shape.ShapeUtils
 import com.bbn.openmap.layer.shape.*
 import com.google.android.gms.maps.CameraUpdateFactory
@@ -29,11 +32,11 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_maps)
-        setSupportActionBar(findViewById(R.id.toolBar))
         val mapFragment = supportFragmentManager
             .findFragmentById(R.id.map) as SupportMapFragment
         setupPermissions()
         mapFragment.getMapAsync(this)
+        setSupportActionBar(findViewById(R.id.toolBar))
     }
 
     override fun onMapReady(googleMap: GoogleMap) {
@@ -156,5 +159,19 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         val canvas = Canvas(image)
         canvas.drawText(text, 0f, baseline, paint)
         return image
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        menuInflater.inflate(R.menu.app_bar_menu, menu)
+        return true
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem) = when (item.itemId) {
+        R.id.action_layers -> {
+            true
+        }
+        else -> {
+            super.onOptionsItemSelected(item)
+        }
     }
 }
