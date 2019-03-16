@@ -1,6 +1,7 @@
 package com.diplom.map
 
 import android.Manifest
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.Canvas
@@ -168,6 +169,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
     override fun onOptionsItemSelected(item: MenuItem) = when (item.itemId) {
         R.id.action_layers -> {
+            startActivity(Intent(this, LayerActivity::class.java))
             true
         }
         else -> {
