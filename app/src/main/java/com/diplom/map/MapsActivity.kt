@@ -37,6 +37,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
     override fun onMapReady(googleMap: GoogleMap) {
         mMap = googleMap
+        mMap.isBuildingsEnabled = true
+        mMap.uiSettings.isMapToolbarEnabled = true
         val sydney = LatLng(53.551413, 27.057378)
         mMap.mapType = GoogleMap.MAP_TYPE_HYBRID
         mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney))
