@@ -29,6 +29,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_maps)
+        setSupportActionBar(findViewById(R.id.toolBar))
         val mapFragment = supportFragmentManager
             .findFragmentById(R.id.map) as SupportMapFragment
         setupPermissions()
@@ -40,11 +41,10 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         mMap.isBuildingsEnabled = true
         mMap.uiSettings.isMapToolbarEnabled = true
         val sydney = LatLng(53.551413, 27.057378)
-        mMap.mapType = GoogleMap.MAP_TYPE_HYBRID
+        mMap.mapType = GoogleMap.MAP_TYPE_NORMAL
         mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney))
         val lakes = GeoPolyLayer(mMap, "alaska", "/storage/emulated/0/Map/")
         mMap.setOnCameraIdleListener { lakes.updateVisibility(mMap.projection.visibleRegion.latLngBounds) }
-
     }
 
     private fun setupPermissions() {

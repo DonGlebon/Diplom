@@ -32,18 +32,18 @@ class GeoPolyLayer(override val map: GoogleMap, filename: String, path: String) 
     }
 
     fun updateVisibility(bounds: LatLngBounds) {
-        var visible = false
-        for (poly in polygons) {
-            poly.isVisible = false
-            for (point in poly.points) {
-                if (bounds.contains(point)) {
-                    visible = true
-                    break
+        if (isVisible) {
+            for (poly in polygons) {
+                var visible = false
+                for (point in poly.points) {
+                    if (bounds.contains(point)) {
+                        visible = true
+                        break
+                    }
                 }
+                if (visible != poly.isVisible)
+                    poly.isVisible = visible
             }
-            if (visible)
-                poly.isVisible = true
-            visible = false
         }
     }
 
