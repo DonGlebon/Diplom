@@ -10,36 +10,33 @@ import android.graphics.Paint
 import android.os.Bundle
 import android.support.v4.app.ActivityCompat
 import android.support.v4.content.ContextCompat
-import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
-import com.bbn.openmap.dataAccess.shape.ShapeUtils
-import com.bbn.openmap.layer.shape.*
-import com.diplom.map.DbfInputStreamReader
+import com.bbn.openmap.layer.shape.ESRIPointRecord
 import com.diplom.map.GeoPolyLayer
 import com.diplom.map.LayerActivity
 import com.diplom.map.R
+import com.diplom.map.mvp.App
+import com.diplom.map.mvp.abstracts.view.BaseCompatActivity
 import com.diplom.map.mvp.components.mapscreen.contract.MapScreenContract
 import com.diplom.map.mvp.components.mapscreen.presenter.MapScreenPresenter
-import com.diplom.map.mvp.abstracts.view.BaseCompatActivity
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.*
-import java.io.File
-import java.io.FileInputStream
+import javax.inject.Inject
 
 
-class MapsActivity : BaseCompatActivity(), MapScreenContract.View, OnMapReadyCallback {
+class MapActivity : BaseCompatActivity(), MapScreenContract.View, OnMapReadyCallback {
 
-    private val presenter = MapScreenPresenter()
+    @Inject
+    lateinit var presenter: MapScreenPresenter
     private lateinit var mMap: GoogleMap
-    private var pointCount = 0
-    private var polyCount = 0
 
     override fun init(savedInstanceState: Bundle?) {
         setContentView(R.layout.activity_maps)
+        App.get().injector.inject(this)
         presenter.attach(this)
         setupPermissions()
         setSupportActionBar(findViewById(R.id.toolBar))
@@ -70,42 +67,6 @@ class MapsActivity : BaseCompatActivity(), MapScreenContract.View, OnMapReadyCal
         }
     }
 
-    private fun readShapefile() {
-        try {
-            val targetFilePath = "/storage/emulated/0/Map/lakes.shp"
-            val shapeFile = ShapeFile(targetFilePath)
-            val fileInputStream = FileInputStream(File("/storage/emulated/0/Map/ref.dbf"))
-            val dbfInputStream = DbfInputStreamReader(fileInputStream)
-            var esriRecord: ESRIRecord? = shapeFile.nextRecord
-            while (esriRecord != null) {
-                val shapeTypeStr = ShapeUtils.getStringForType(esriRecord.shapeType)
-                if (shapeTypeStr == "POLYGON") {
-                    val polyRec = esriRecord as ESRIPolygonRecord?
-                    polyRec!!.polygons.size
-                    for (i in polyRec.polygons.indices) {
-                        drawESIRPolygon(
-                            mMap,
-                            polyRec.polygons[i] as ESRIPoly.ESRIFloatPoly,
-                            Color.argb(150, 200, 0, 0),
-                            Color.argb(150, 0, 0, 150),
-                            2.0f
-                        )
-                    }
-                } else if (shapeTypeStr == "POINT") {
-                    polyCount++
-                    val pol = drawESIRPoint(mMap, esriRecord as ESRIPointRecord)
-                    val pointName = (dbfInputStream.records[polyCount] as ArrayList<*>)[3]
-                    drawText(mMap, pointName.toString(), pol.center, 128f, Color.argb(150, 255, 0, 0), 1000f)
-
-                }
-                esriRecord = shapeFile.nextRecord
-            }
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
-    }
-
-
     private fun drawText(
         map: GoogleMap,
         text: String,
@@ -119,26 +80,6 @@ class MapsActivity : BaseCompatActivity(), MapScreenContract.View, OnMapReadyCal
         groundOptions.anchor(.5f, 1.0f)
         groundOptions.position(position, text.length * charSize, charSize * 2.1f)
         return map.addGroundOverlay(groundOptions)
-    }
-
-    private fun drawESIRPolygon(
-        map: GoogleMap,
-        poly: ESRIPoly.ESRIFloatPoly,
-        strokeColor: Int,
-        fillColor: Int,
-        strokeWidth: Float
-    ): Polygon {
-        val polygonOptions = PolygonOptions().apply {
-            strokeColor(strokeColor)
-            fillColor(fillColor)
-            strokeWidth(strokeWidth)
-        }
-        pointCount += poly.nPoints
-        for (j in 0 until poly.nPoints) {
-            polygonOptions.add(LatLng(poly.getY(j), poly.getX(j)))
-        }
-        polyCount++
-        return map.addPolygon(polygonOptions)
     }
 
     private fun drawESIRPoint(map: GoogleMap, point: ESRIPointRecord): Circle {

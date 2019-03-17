@@ -10,17 +10,19 @@
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
 
     <application
+            android:name=".mvp.App"
             android:allowBackup="true"
             android:icon="@mipmap/ic_launcher"
             android:label="@string/app_name"
             android:roundIcon="@mipmap/ic_launcher_round"
             android:supportsRtl="true"
             android:theme="@style/AppTheme">
+
         <activity android:name=".LayerActivity" android:label="Layer activity"
-                  android:parentActivityName="com.diplom.map.mvp.components.mapscreen.view.MapsActivity">
+                  android:parentActivityName="com.diplom.map.mvp.components.mapscreen.view.MapActivity">
             <meta-data
                     android:name="android.support.PARENT_ACTIVITY"
-                    android:value="com.diplom.map.mvp.components.mapscreen.view.MapsActivity"/>
+                    android:value="com.diplom.map.mvp.components.mapscreen.view.MapActivity"/>
         </activity>
 
         <meta-data
@@ -28,7 +30,7 @@
                 android:value="@string/google_maps_key"/>
 
         <activity
-                android:name="com.diplom.map.mvp.components.mapscreen.view.MapsActivity"
+                android:name="com.diplom.map.mvp.components.mapscreen.view.MapActivity"
                 android:label="@string/title_activity_maps">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>

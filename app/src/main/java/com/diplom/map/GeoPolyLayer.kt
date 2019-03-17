@@ -85,7 +85,7 @@ class GeoPolyLayer(override val map: GoogleMap, filename: String, path: String) 
                 fillColor(style.fillColor)
                 strokeWidth(style.strokeWidth)
                 strokePattern(style.pattern)
-                geodesic(true)
+                visible(false)
             }
             for (point in poly.points)
                 polygonOptions.add(point)
