@@ -42,11 +42,8 @@ dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
     implementation 'com.android.support:appcompat-v7:28.0.0'
     implementation 'com.google.android.gms:play-services-maps:16.1.0'
-//    api 'org.geotools:gt-shapefile:11.5'
-//    api 'org.geotools:gt-metadata:11.5'
-//    api 'org.geotools:gt-main:11.5'
-//    api 'org.geotools:gt-cql:11.0'
-//    api 'org.geotools:gt-api:11.0'
+    implementation "com.google.dagger:dagger:$dagger2_version"
+    kapt "com.google.dagger:dagger-compiler:$dagger2_version"
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'com.android.support.test:runner:1.0.2'
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
