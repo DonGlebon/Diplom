@@ -1,7 +1,6 @@
 package com.diplom.map
 
 import android.graphics.Color
-import android.util.Log
 import com.bbn.openmap.dataAccess.shape.ShapeUtils
 import com.bbn.openmap.layer.shape.ESRIPoly
 import com.bbn.openmap.layer.shape.ESRIPolygonRecord
@@ -11,9 +10,7 @@ import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.model.*
 import java.io.File
 
-class GeoPolyLayer(override val map: GoogleMap, filename: String, path: String) : GEOLayer {
-
-    override var isVisible: Boolean = true
+class PolygonLayer(filename: String, path: String) : GEOLayer<PolygonLayer> {
 
     private lateinit var polygons: ArrayList<Polygon>
 
@@ -21,37 +18,6 @@ class GeoPolyLayer(override val map: GoogleMap, filename: String, path: String) 
 
     init {
         readShpFile(File("$path$filename.shp"))
-        readDbfFile(File("$path$filename.dbf"))
-        val style = PolygonStyle(
-            fillColor = Color.argb(150, 20, 240, 40),
-            strokeColor = Color.argb(150, 140, 20, 140),
-            strokeWidth = 4.0f,
-            pattern = arrayListOf(Dot(), Gap(5f))
-        )
-        draw(style)
-    }
-
-    fun updateVisibility(bounds: LatLngBounds) {
-        if (isVisible) {
-            for (poly in polygons) {
-                var visible = false
-                for (point in poly.points) {
-                    if (bounds.contains(point)) {
-                        visible = true
-                        break
-                    }
-                }
-                if (visible != poly.isVisible)
-                    poly.isVisible = visible
-            }
-        }
-    }
-
-    override fun setVisibility(visibility: Boolean) {
-        isVisible = visibility
-        for (poly in polygons) {
-            poly.isVisible = visibility
-        }
     }
 
     private fun readShpFile(file: File) {
@@ -77,22 +43,44 @@ class GeoPolyLayer(override val map: GoogleMap, filename: String, path: String) 
         }
     }
 
-    private fun draw(style: PolygonStyle) {
+    override fun updateVisibility(bounds: LatLngBounds) {
+        for (poly in polygons) {
+            var visible = false
+            for (point in poly.points) {
+                if (bounds.contains(point)) {
+                    visible = true
+                    break
+                }
+            }
+            if (visible != poly.isVisible)
+                poly.isVisible = visible
+        }
+    }
+
+    override fun getLayout(map: GoogleMap): PolygonLayer {
+        val style = PolygonStyle(
+            fillColor = Color.argb(150, 20, 240, 40),
+            strokeColor = Color.argb(150, 140, 20, 140),
+            strokeWidth = 4.0f,
+            pattern = arrayListOf(Dash(1f))
+        )
+        draw(map, style)
+        return this
+    }
+
+    private fun draw(map: GoogleMap, style: PolygonStyle) {
         polygons = ArrayList()
         for (poly in _esirPoly) {
             val polygonOptions = PolygonOptions()
                 .strokeColor(style.strokeColor)
                 .fillColor(style.fillColor)
                 .strokeWidth(style.strokeWidth)
-                .strokePattern(style.pattern)
                 .visible(false)
+                .zIndex(0f)
             for (point in poly.points)
                 polygonOptions.add(point)
             polygons.add(map.addPolygon(polygonOptions))
         }
     }
 
-    private fun readDbfFile(file: File) {
-
-    }
 }

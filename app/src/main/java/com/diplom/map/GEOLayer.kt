@@ -1,9 +1,10 @@
 package com.diplom.map
 
 import com.google.android.gms.maps.GoogleMap
+import com.google.android.gms.maps.model.LatLngBounds
 
-interface GEOLayer {
-    val map: GoogleMap
-    var isVisible: Boolean
-    fun setVisibility(visibility: Boolean)
+interface GEOLayer<V> {
+
+    fun getLayout(map: GoogleMap): V
+    fun updateVisibility(bounds: LatLngBounds)
 }

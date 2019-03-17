@@ -10,11 +10,9 @@ import android.graphics.Paint
 import android.os.Bundle
 import android.support.v4.app.ActivityCompat
 import android.support.v4.content.ContextCompat
-import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import com.bbn.openmap.layer.shape.ESRIPointRecord
-import com.diplom.map.GeoPolyLayer
 import com.diplom.map.LayerActivity
 import com.diplom.map.R
 import com.diplom.map.mvp.App
@@ -49,10 +47,12 @@ class MapActivity : BaseCompatActivity(), MapScreenContract.View, OnMapReadyCall
         mMap = googleMap
         val sydney = LatLng(53.551413, 27.057378)
         mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney))
-//        val lakes = GeoPolyLayer(mMap, "alaska", "/storage/emulated/0/Map/")
-        Log.d("Hello", "ready")
-        val lakes = presenter.getLayout(mMap)
-        mMap.setOnCameraIdleListener { lakes.updateVisibility(mMap.projection.visibleRegion.latLngBounds) }
+        val layers = presenter.getLayout(mMap)
+        mMap.setOnCameraIdleListener {
+            for (layer in layers) {
+                layer.updateVisibility(mMap.projection.visibleRegion.latLngBounds)
+            }
+        }
     }
 
     private fun setupPermissions() {
@@ -67,37 +67,6 @@ class MapActivity : BaseCompatActivity(), MapScreenContract.View, OnMapReadyCall
                 101
             )
         }
-    }
-
-    private fun GoogleMap.drawText(
-        map: GoogleMap,
-        text: String,
-        position: LatLng,
-        textSize: Float,
-        textColor: Int,
-        charSize: Float
-    ): GroundOverlay {
-        val groundOptions = GroundOverlayOptions()
-            .image(BitmapDescriptorFactory.fromBitmap(textToBitmap(text, textSize, textColor)))
-            .anchor(.5f, 1.0f)
-            .position(position, text.length * charSize, charSize * 2.1f)
-        return map.addGroundOverlay(groundOptions)
-    }
-
-    private fun textToBitmap(text: String, textSize: Float, textColor: Int): Bitmap {
-        val paint = Paint(Paint.ANTI_ALIAS_FLAG)
-            .also {
-                it.textSize = textSize
-                it.color = textColor
-                it.textAlign = Paint.Align.LEFT
-            }
-        val baseline = -paint.ascent()
-        val width = (paint.measureText(text) + 0.5f).toInt()
-        val height = (baseline + paint.descent() + 0.5f).toInt()
-        val image = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
-        val canvas = Canvas(image)
-        canvas.drawText(text, 0f, baseline, paint)
-        return image
     }
 
     private fun drawESIRPoint(map: GoogleMap, point: ESRIPointRecord): Circle {
