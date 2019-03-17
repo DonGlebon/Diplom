@@ -1,4 +1,4 @@
-package com.diplom.map
+package com.diplom.map.mvp.components.mapscreen.view
 
 import android.Manifest
 import android.content.Intent
@@ -10,12 +10,18 @@ import android.graphics.Paint
 import android.os.Bundle
 import android.support.v4.app.ActivityCompat
 import android.support.v4.content.ContextCompat
-import android.support.v7.app.AppCompatActivity
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import com.bbn.openmap.dataAccess.shape.ShapeUtils
 import com.bbn.openmap.layer.shape.*
+import com.diplom.map.DbfInputStreamReader
+import com.diplom.map.GeoPolyLayer
+import com.diplom.map.LayerActivity
+import com.diplom.map.R
+import com.diplom.map.mvp.components.mapscreen.contract.MapScreenContract
+import com.diplom.map.mvp.components.mapscreen.presenter.MapScreenPresenter
+import com.diplom.map.mvp.abstracts.view.BaseCompatActivity
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
@@ -25,27 +31,26 @@ import java.io.File
 import java.io.FileInputStream
 
 
-class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
+class MapsActivity : BaseCompatActivity(), MapScreenContract.View, OnMapReadyCallback {
+
+    private val presenter = MapScreenPresenter()
     private lateinit var mMap: GoogleMap
     private var pointCount = 0
     private var polyCount = 0
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
+    override fun init(savedInstanceState: Bundle?) {
         setContentView(R.layout.activity_maps)
+        presenter.attach(this)
+        setupPermissions()
+        setSupportActionBar(findViewById(R.id.toolBar))
         val mapFragment = supportFragmentManager
             .findFragmentById(R.id.map) as SupportMapFragment
-        setupPermissions()
         mapFragment.getMapAsync(this)
-        setSupportActionBar(findViewById(R.id.toolBar))
     }
 
     override fun onMapReady(googleMap: GoogleMap) {
         mMap = googleMap
-        mMap.isBuildingsEnabled = true
-        mMap.uiSettings.isMapToolbarEnabled = true
         val sydney = LatLng(53.551413, 27.057378)
-        mMap.mapType = GoogleMap.MAP_TYPE_NORMAL
         mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney))
         val lakes = GeoPolyLayer(mMap, "alaska", "/storage/emulated/0/Map/")
         mMap.setOnCameraIdleListener { lakes.updateVisibility(mMap.projection.visibleRegion.latLngBounds) }
