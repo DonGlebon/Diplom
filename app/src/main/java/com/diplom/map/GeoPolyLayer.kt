@@ -80,13 +80,12 @@ class GeoPolyLayer(override val map: GoogleMap, filename: String, path: String) 
     private fun draw(style: PolygonStyle) {
         polygons = ArrayList()
         for (poly in _esirPoly) {
-            val polygonOptions = PolygonOptions().apply {
-                strokeColor(style.strokeColor)
-                fillColor(style.fillColor)
-                strokeWidth(style.strokeWidth)
-                strokePattern(style.pattern)
-                visible(false)
-            }
+            val polygonOptions = PolygonOptions()
+                .strokeColor(style.strokeColor)
+                .fillColor(style.fillColor)
+                .strokeWidth(style.strokeWidth)
+                .strokePattern(style.pattern)
+                .visible(false)
             for (point in poly.points)
                 polygonOptions.add(point)
             polygons.add(map.addPolygon(polygonOptions))

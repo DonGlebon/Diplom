@@ -10,6 +10,7 @@ import android.graphics.Paint
 import android.os.Bundle
 import android.support.v4.app.ActivityCompat
 import android.support.v4.content.ContextCompat
+import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import com.bbn.openmap.layer.shape.ESRIPointRecord
@@ -26,7 +27,6 @@ import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.*
 import javax.inject.Inject
-
 
 class MapActivity : BaseCompatActivity(), MapScreenContract.View, OnMapReadyCallback {
 
@@ -49,7 +49,9 @@ class MapActivity : BaseCompatActivity(), MapScreenContract.View, OnMapReadyCall
         mMap = googleMap
         val sydney = LatLng(53.551413, 27.057378)
         mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney))
-        val lakes = GeoPolyLayer(mMap, "alaska", "/storage/emulated/0/Map/")
+//        val lakes = GeoPolyLayer(mMap, "alaska", "/storage/emulated/0/Map/")
+        Log.d("Hello", "ready")
+        val lakes = presenter.getLayout(mMap)
         mMap.setOnCameraIdleListener { lakes.updateVisibility(mMap.projection.visibleRegion.latLngBounds) }
     }
 
@@ -67,7 +69,7 @@ class MapActivity : BaseCompatActivity(), MapScreenContract.View, OnMapReadyCall
         }
     }
 
-    private fun drawText(
+    private fun GoogleMap.drawText(
         map: GoogleMap,
         text: String,
         position: LatLng,
@@ -76,20 +78,10 @@ class MapActivity : BaseCompatActivity(), MapScreenContract.View, OnMapReadyCall
         charSize: Float
     ): GroundOverlay {
         val groundOptions = GroundOverlayOptions()
-        groundOptions.image(BitmapDescriptorFactory.fromBitmap(textToBitmap(text, textSize, textColor)))
-        groundOptions.anchor(.5f, 1.0f)
-        groundOptions.position(position, text.length * charSize, charSize * 2.1f)
+            .image(BitmapDescriptorFactory.fromBitmap(textToBitmap(text, textSize, textColor)))
+            .anchor(.5f, 1.0f)
+            .position(position, text.length * charSize, charSize * 2.1f)
         return map.addGroundOverlay(groundOptions)
-    }
-
-    private fun drawESIRPoint(map: GoogleMap, point: ESRIPointRecord): Circle {
-        val polygonOptions = CircleOptions()
-        polygonOptions.strokeColor(Color.argb(150, 200, 0, 0))
-        polygonOptions.fillColor(Color.argb(150, 200, 0, 0))
-        polygonOptions.strokeWidth(20.0f)
-        polygonOptions.center(LatLng(point.y, point.x))
-        polygonOptions.radius(400.0)
-        return map.addCircle(polygonOptions)
     }
 
     private fun textToBitmap(text: String, textSize: Float, textColor: Int): Bitmap {
@@ -106,6 +98,16 @@ class MapActivity : BaseCompatActivity(), MapScreenContract.View, OnMapReadyCall
         val canvas = Canvas(image)
         canvas.drawText(text, 0f, baseline, paint)
         return image
+    }
+
+    private fun drawESIRPoint(map: GoogleMap, point: ESRIPointRecord): Circle {
+        val polygonOptions = CircleOptions()
+            .strokeColor(Color.argb(150, 200, 0, 0))
+            .fillColor(Color.argb(150, 200, 0, 0))
+            .strokeWidth(20.0f)
+            .center(LatLng(point.y, point.x))
+            .radius(400.0)
+        return map.addCircle(polygonOptions)
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
