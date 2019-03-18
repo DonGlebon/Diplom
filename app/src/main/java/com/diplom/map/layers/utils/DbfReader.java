@@ -1,18 +1,18 @@
-package com.diplom.map;
+package com.diplom.map.layers.utils;
 
 import com.bbn.openmap.dataAccess.shape.DbfTableModel;
 import com.bbn.openmap.dataAccess.shape.input.LittleEndianInputStream;
 
-import java.io.BufferedInputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
+import java.nio.charset.CharsetDecoder;
+import java.nio.charset.CharsetEncoder;
 import java.util.ArrayList;
 
-public class DbfInputStreamReader {
+public class DbfReader {
     /**
      * An input stream to process primitives in Little Endian or Big Endian
      */
-    private LittleEndianInputStream _leis = null;
+    private DbfStreamReader _leis = null;
 
     /**
      * An array of column names, as read from the field descripter array
@@ -65,11 +65,13 @@ public class DbfInputStreamReader {
      *
      * @param is An inputstream used to create a LittleEndianInputStream
      */
-    public DbfInputStreamReader(InputStream is) throws Exception {
+    public DbfReader(InputStream is) throws Exception {
         BufferedInputStream bis = new BufferedInputStream(is);
-        _leis = new LittleEndianInputStream(bis);
+        // new InputStreamReader(new DataInputStream(is));
+        // _leis = new LittleEndianInputStream(is);
+        _leis = new DbfStreamReader(bis);
         readHeader();
-        readFieldDescripters();
+        readFieldDescriptors();
         readData();
     }
 
@@ -156,7 +158,7 @@ public class DbfInputStreamReader {
      * Initializes arrays that hold column names, column types, character
      * lengths, and decimal counts, then populates them
      */
-    private void readFieldDescripters() throws IOException {
+    private void readFieldDescriptors() throws IOException {
         _columnNames = new String[_columnCount];
         _types = new byte[_columnCount];
         _lengths = new byte[_columnCount];
@@ -184,8 +186,11 @@ public class DbfInputStreamReader {
                 int length = _lengths[c];
                 int type = _types[c];
                 String cell = _leis.readString(length);
-                if (type == DbfTableModel.TYPE_NUMERIC && !cell.equals("")) {
-                    record.add(c, new Double(cell));
+                if (cell.contains("*")) {
+                    record.add(c, "");
+                } else if (type == DbfTableModel.TYPE_NUMERIC && !cell.equals("")) {
+                    double d = new Double(cell);
+                    record.add(c, cell);
                 } else {
                     record.add(c, cell);
                 }
@@ -195,3 +200,4 @@ public class DbfInputStreamReader {
         }
     }
 }
+

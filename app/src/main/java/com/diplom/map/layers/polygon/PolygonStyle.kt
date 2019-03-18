@@ -1,4 +1,4 @@
-package com.diplom.map
+package com.diplom.map.layers.polygon
 
 import com.google.android.gms.maps.model.PatternItem
 
