@@ -21,6 +21,10 @@ import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.*
+import io.reactivex.Observable
+import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.schedulers.Schedulers
+import java.util.*
 import javax.inject.Inject
 
 class MapActivity : BaseCompatActivity(), MapScreenContract.View, OnMapReadyCallback {
@@ -46,6 +50,12 @@ class MapActivity : BaseCompatActivity(), MapScreenContract.View, OnMapReadyCall
         mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney))
         val layers = presenter.getLayout(mMap)
         mMap.setOnCameraIdleListener {
+//            Observable.fromIterable(layers)
+//                .observeOn(AndroidSchedulers.mainThread())
+//                .subscribeOn(Schedulers.newThread())
+//                .doOnNext { it.updateVisibility(mMap.projection.visibleRegion.latLngBounds) }
+//                .subscribe()
+
             for (layer in layers) {
                 layer.updateVisibility(mMap.projection.visibleRegion.latLngBounds)
             }

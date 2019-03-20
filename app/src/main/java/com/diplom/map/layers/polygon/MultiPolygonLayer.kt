@@ -1,6 +1,7 @@
 package com.diplom.map.layers.polygon
 
 import android.graphics.Color
+import android.util.Log
 import com.bbn.openmap.dataAccess.shape.ShapeUtils
 import com.bbn.openmap.layer.shape.ESRIPoly
 import com.bbn.openmap.layer.shape.ESRIPolygonRecord
@@ -8,9 +9,16 @@ import com.bbn.openmap.layer.shape.ESRIRecord
 import com.bbn.openmap.layer.shape.ShapeFile
 import com.diplom.map.layers.GEOLayer
 import com.diplom.map.layers.utils.DbfReader
+import com.diplom.map.layers.utils.VisibleTask
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.model.*
+import io.reactivex.Observable
+import io.reactivex.Scheduler
+import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.schedulers.Schedulers
 import java.io.*
+import java.util.*
+import kotlin.collections.ArrayList
 
 
 class MultiPolygonLayer(filename: String, path: String) :
@@ -56,18 +64,31 @@ class MultiPolygonLayer(filename: String, path: String) :
     }
 
     override fun updateVisibility(bounds: LatLngBounds) {
+//        val s: Long = System.currentTimeMillis()
+//        Observable.fromIterable(polygons)
+//            .observeOn(AndroidSchedulers.mainThread())
+//            .subscribeOn(Schedulers.newThread())
+//            .doOnNext {
+//                var visible = false
+//                for (point in it.points) {
+//                    if (bounds.contains(point)) {
+//                        visible = true
+//                        break
+//                    }
+//                }
+//                if (visible != it.isVisible) {
+//                    it.isVisible = visible
+//                }
+//            }
+//            .doOnComplete { Log.d("Hello", "com: ${System.currentTimeMillis() - s}") }
+//            .subscribe()
         for (i in 0 until polygons.size) {
-            val polygon = polygons[i]
-            var visible = false
-            for (point in polygon.points) {
-                if (bounds.contains(point)) {
-                    visible = true
-                    break
-                }
-            }
-            if (visible != polygon.isVisible)
-                polygon.isVisible = visible
+            val task = VisibleTask()
+            task.polygon = polygons[i]
+            task.bounds = bounds
+            task.execute(polygons[i].points as ArrayList<LatLng>?)
         }
+
     }
 
     override fun getLayout(map: GoogleMap): MultiPolygonLayer {
@@ -76,21 +97,39 @@ class MultiPolygonLayer(filename: String, path: String) :
     }
 
     private fun draw(map: GoogleMap) {
-
-        for (multiPolygon in multiPolygons) {
-            for (polygon in multiPolygon.polygons) {
-                polygons.add(
-                    map.addPolygon(
-                        PolygonOptions()
-                            .addAll(polygon.points)
-                            .strokeColor(Color.argb(150, 20, 240, 40))
-                            .fillColor(Color.argb(150, 140, 20, 140))
-                            .strokeWidth(4.0f)
-                            .visible(false)
-                            .zIndex(0f)
+        Observable.fromIterable(multiPolygons)
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribeOn(Schedulers.newThread())
+            .doOnNext {
+                for (polygon in it.polygons) {
+                    polygons.add(
+                        map.addPolygon(
+                            PolygonOptions()
+                                .addAll(polygon.points)
+                                .strokeColor(Color.argb(150, 20, 240, 40))
+                                .fillColor(Color.argb(150, 140, 20, 140))
+                                .strokeWidth(4.0f)
+                                .visible(true)
+                                .zIndex(0f)
+                        )
                     )
-                )
+                }
             }
-        }
+            .subscribe()
+//        for (multiPolygon in multiPolygons) {
+//            for (polygon in multiPolygon.polygons) {
+//                polygons.add(
+//                    map.addPolygon(
+//                        PolygonOptions()
+//                            .addAll(polygon.points)
+//                            .strokeColor(Color.argb(150, 20, 240, 40))
+//                            .fillColor(Color.argb(150, 140, 20, 140))
+//                            .strokeWidth(4.0f)
+//                            .visible(false)
+//                            .zIndex(0f)
+//                    )
+//                )
+//            }
+//        }
     }
 }

@@ -6,15 +6,27 @@ import com.google.android.gms.maps.model.LatLngBounds
 class ShapePolygon {
 
     var points = ArrayList<LatLng>()
-    var bounds: LatLngBounds? = null
+    lateinit var bounds: LatLngBounds
 
-    private fun getPolygonBounds(): LatLngBounds {
-        return if (bounds == null) {
-            val builder = LatLngBounds.Builder()
-            for (point in points) {
-                builder.include(point)
-            }
-            builder.build()
-        } else bounds!!
+
+    fun addPoint(point: LatLng) {
+        points.add(point)
+    }
+
+    private fun setBounds() {
+        val builder = LatLngBounds.Builder()
+        for (point in points) {
+            builder.include(point)
+        }
+        bounds = builder.build()
+    }
+
+    fun build(): ShapePolygon {
+        setBounds()
+        return this
+    }
+
+    fun getPolygonBounds(): LatLngBounds {
+        return bounds
     }
 }
