@@ -50,7 +50,7 @@ class MapActivity : BaseCompatActivity(), MapScreenContract.View, OnMapReadyCall
         mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney))
         val layers = presenter.getLayout(mMap)
         mMap.setOnCameraIdleListener {
-//            Observable.fromIterable(layers)
+            //            Observable.fromIterable(layers)
 //                .observeOn(AndroidSchedulers.mainThread())
 //                .subscribeOn(Schedulers.newThread())
 //                .doOnNext { it.updateVisibility(mMap.projection.visibleRegion.latLngBounds) }

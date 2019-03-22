@@ -5,7 +5,6 @@ class ShapeMultiPolygon {
     var polygons = ArrayList<ShapePolygon>()
     val holes = ArrayList<ShapePolygon>()
 
-
     companion object {
         fun Builder(): ShapeMultiPolygonBuilder {
             return ShapeMultiPolygonBuilder()

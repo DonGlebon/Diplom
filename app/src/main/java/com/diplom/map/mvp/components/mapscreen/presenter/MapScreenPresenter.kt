@@ -15,6 +15,6 @@ class MapScreenPresenter : BasePresenter<MapScreenContract.View>(), MapScreenCon
         PointLayer("airports1", "/storage/emulated/0/Map/")
 
     override fun getLayout(map: GoogleMap): ArrayList<GEOLayer<*>> {
-        return arrayListOf(layout.getLayout(map), layoutP.getLayout(map))
+        return arrayListOf(layout.getLayout(map))
     }
 }

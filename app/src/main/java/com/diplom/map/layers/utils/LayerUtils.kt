@@ -31,7 +31,6 @@ class LayerUtils {
                 )
                 .anchor(.5f, 1.0f)
                 .position(position, text.length * charSize, charSize * 2.1f)
-                .visible(false)
                 .zIndex(1f)
             return map.addGroundOverlay(groundOptions)
         }
