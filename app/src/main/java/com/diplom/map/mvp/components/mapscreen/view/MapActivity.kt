@@ -57,7 +57,7 @@ class MapActivity : BaseCompatActivity(), MapScreenContract.View, OnMapReadyCall
 //                .subscribe()
 
             for (layer in layers) {
-                layer.updateVisibility(mMap.projection.visibleRegion.latLngBounds)
+                layer.updateVisibility(mMap.projection.visibleRegion.latLngBounds, 1f)
             }
         }
     }

@@ -7,6 +7,6 @@ interface GEOLayer<V> {
 
     fun getLayout(map: GoogleMap): V
 
-    fun updateVisibility(bounds: LatLngBounds)
+    fun updateVisibility(bounds: LatLngBounds, zoom: Float)
 
 }

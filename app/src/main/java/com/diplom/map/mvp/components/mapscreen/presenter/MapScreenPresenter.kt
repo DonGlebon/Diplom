@@ -13,6 +13,7 @@ class MapScreenPresenter : BasePresenter<MapScreenContract.View>(), MapScreenCon
         MultiPolygonLayer("kvartal_zone", "/storage/emulated/0/Map/")
     private var layoutP: PointLayer =
         PointLayer("airports1", "/storage/emulated/0/Map/")
+    private val lay = MultiPolygonLayer("vydel", "/storage/emulated/0/Map/")
 
     override fun getLayout(map: GoogleMap): ArrayList<GEOLayer<*>> {
         return arrayListOf(layout.getLayout(map))

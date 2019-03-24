@@ -69,7 +69,7 @@ class PointLayer(filename: String, path: String) : GEOLayer<PointLayer> {
         }
     }
 
-    override fun updateVisibility(bounds: LatLngBounds) {
+    override fun updateVisibility(bounds: LatLngBounds, zoom: Float) {
         for (i in 0 until circles.size) {
             var visible = false
             if (bounds.contains(circles[i].center))

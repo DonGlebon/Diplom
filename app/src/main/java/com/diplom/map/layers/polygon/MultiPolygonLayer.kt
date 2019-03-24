@@ -1,6 +1,7 @@
 package com.diplom.map.layers.polygon
 
 import android.graphics.Color
+import android.util.Log
 import com.bbn.openmap.dataAccess.shape.ShapeUtils
 import com.bbn.openmap.layer.shape.ESRIPoly
 import com.bbn.openmap.layer.shape.ESRIPolygonRecord
@@ -9,7 +10,6 @@ import com.bbn.openmap.layer.shape.ShapeFile
 import com.diplom.map.layers.GEOLayer
 import com.diplom.map.layers.utils.DbfReader
 import com.diplom.map.layers.utils.LayerUtils
-import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.model.*
 import io.reactivex.Observable
@@ -19,12 +19,15 @@ import java.io.File
 import java.io.FileInputStream
 
 
-class MultiPolygonLayer(filename: String, path: String) :
+class MultiPolygonLayer(
+    filename: String,
+    path: String
+) :
     GEOLayer<MultiPolygonLayer> {
 
     private var polygons: ArrayList<Polygon> = ArrayList()
-    private var multiPolygons = ArrayList<ShapeMultiPolygon>()
-    private var pPoints = ArrayList<MyPoint>()
+    var multiPolygons = ArrayList<ShapeMultiPolygon>()
+    private var polygonPoints = ArrayList<MyPoint>()
     private var textOverlays = ArrayList<GroundOverlay>()
 
     init {
@@ -47,7 +50,7 @@ class MultiPolygonLayer(filename: String, path: String) :
                         for (j in 0 until polygon.nPoints) {
                             shapePolygon.addPoint(LatLng(polygon.getY(j), polygon.getX(j)))
                         }
-                        pPoints.add(MyPoint(polygonCount, shapePolygon.points))
+                        polygonPoints.add(MyPoint(polygonCount, shapePolygon.points))
                         multiPolygon.polygons.add(shapePolygon)
                         polygonCount++
                     }
@@ -66,16 +69,22 @@ class MultiPolygonLayer(filename: String, path: String) :
             multiPolygons[i].attributeSet = dbfStream.records[i] as ArrayList<Any>
     }
 
-    override fun updateVisibility(bounds: LatLngBounds) {
+    override fun updateVisibility(bounds: LatLngBounds, zoom: Float) {
         updatePolygonVisibility(bounds)
-        updateTextVisibility(bounds)
+    }
+
+    private fun hideText() {
+        for (text in textOverlays)
+            text.isVisible = false
+    }
+
+    private fun hidePolygon() {
+        for (polygon in polygons)
+            polygon.isVisible = false
     }
 
     private fun updatePolygonVisibility(bounds: LatLngBounds) {
-        var start = 0
-        var end = 0
-
-        Observable.fromIterable(pPoints)
+        Observable.fromIterable(polygonPoints)
             .subscribeOn(Schedulers.io())
             .observeOn(Schedulers.newThread())
             .doOnNext {
@@ -97,7 +106,7 @@ class MultiPolygonLayer(filename: String, path: String) :
                     .subscribe()
             }
             .subscribe()
-//        Observable.just(pPoints)
+//        Observable.just(polygonPoints)
 //            .subscribeOn(Schedulers.io())
 //            .observeOn(Schedulers.newThread())
 //            .doOnNext {
@@ -134,12 +143,14 @@ class MultiPolygonLayer(filename: String, path: String) :
     }
 
     private fun updateTextVisibility(bounds: LatLngBounds) {
+        for (text in textOverlays)
+            text.isVisible = bounds.contains(text.position)
 
     }
 
     override fun getLayout(map: GoogleMap): MultiPolygonLayer {
         draw(map)
-        drawText(map)
+        //   drawText(map)
         return this
     }
 
@@ -150,43 +161,22 @@ class MultiPolygonLayer(filename: String, path: String) :
                 for (point in polygon.points) {
                     builder.include(point)
                 }
-            val textPosition = builder.build().center
-            val text = "${multiPolygon.attributeSet[2]}: ${multiPolygon.attributeSet[1]}"
             textOverlays.add(
                 LayerUtils.drawText(
                     map,
-                    text,
-                    textPosition,
+                    "${multiPolygon.attributeSet[2]}: ${multiPolygon.attributeSet[1]}",
+                    builder.build().center,
                     120f,
                     Color.YELLOW,
                     30f
                 )
             )
-            map.moveCamera(CameraUpdateFactory.newLatLng(textPosition))
         }
 
     }
 
     private fun draw(map: GoogleMap) {
-//        Observable.fromIterable(multiPolygons)
-//            .observeOn(AndroidSchedulers.mainThread())
-//            .subscribeOn(Schedulers.newThread())
-//            .doOnNext {
-//                for (polygon in it.polygons) {
-//                    polygons.add(
-//                        map.addPolygon(
-//                            PolygonOptions()
-//                                .addAll(polygon.points)
-//                                .strokeColor(Color.argb(150, 20, 240, 40))
-//                                .fillColor(Color.argb(150, 140, 20, 140))
-//                                .strokeWidth(4.0f)
-//                                .visible(false)
-//                                .zIndex(0f)
-//                        )
-//                    )
-//                }
-//            }
-//            .subscribe()
+        val s = System.currentTimeMillis()
         for (multiPolygon in multiPolygons) {
             for (polygon in multiPolygon.polygons) {
                 polygons.add(
@@ -196,12 +186,13 @@ class MultiPolygonLayer(filename: String, path: String) :
                             .strokeColor(Color.argb(150, 20, 240, 40))
                             .fillColor(Color.argb(150, 140, 20, 140))
                             .strokeWidth(4.0f)
-                            .visible(false)
+                            //   .visible(false)
                             .zIndex(0f)
                     )
                 )
             }
         }
+        Log.d("Hello", "draw complete in ${System.currentTimeMillis() - s}")
     }
 }
 
