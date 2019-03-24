@@ -5,26 +5,24 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Color
 import android.os.Bundle
-import android.support.v4.app.ActivityCompat
-import android.support.v4.content.ContextCompat
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import android.view.Menu
 import android.view.MenuItem
 import com.bbn.openmap.layer.shape.ESRIPointRecord
-import com.diplom.map.mvp.components.layerscreen.view.LayerActivity
 import com.diplom.map.R
 import com.diplom.map.mvp.App
 import com.diplom.map.mvp.abstracts.view.BaseCompatActivity
+import com.diplom.map.mvp.components.layerscreen.view.LayerActivity
 import com.diplom.map.mvp.components.mapscreen.contract.MapScreenContract
 import com.diplom.map.mvp.components.mapscreen.presenter.MapScreenPresenter
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
-import com.google.android.gms.maps.model.*
-import io.reactivex.Observable
-import io.reactivex.android.schedulers.AndroidSchedulers
-import io.reactivex.schedulers.Schedulers
-import java.util.*
+import com.google.android.gms.maps.model.Circle
+import com.google.android.gms.maps.model.CircleOptions
+import com.google.android.gms.maps.model.LatLng
 import javax.inject.Inject
 
 class MapActivity : BaseCompatActivity(), MapScreenContract.View, OnMapReadyCallback {
