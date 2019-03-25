@@ -13,6 +13,7 @@ import com.google.android.gms.maps.GoogleMap
 import io.reactivex.Observable
 import io.reactivex.Scheduler
 import io.reactivex.Single
+import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.schedulers.Schedulers
 import java.util.*
 import javax.inject.Inject
@@ -32,15 +33,16 @@ class MapScreenPresenter : BasePresenter<MapScreenContract.View>(), MapScreenCon
     private val lay = MultiPolygonLayer("vydel", "/storage/emulated/0/Map/")
 
     override fun getLayout(map: GoogleMap): ArrayList<GEOLayer<*>> {
-        Observable.just(db)
-            .observeOn(Schedulers.io())
-            .subscribeOn(Schedulers.newThread())
-            .doOnNext {
-                it.multiPolygonDao().insert(MultiPolygon(4))
-                for (i in it.multiPolygonDao().getAllMultiPolygons())
-                    Log.d("Hello", "room: ${i.uid}")
-            }
-            .subscribe()
+//        CompositeDisposable().add(
+//            Single.just(db)
+//                .observeOn(Schedulers.io())
+//                .subscribeOn(Schedulers.newThread())
+//                .subscribe({
+//                    //     it.multiPolygonDao().insert(MultiPolygon(4))
+//                    for (i in it.multiPolygonDao().getAllMultiPolygons())
+//                        Log.d("Hello", "room: ${i.uid}")
+//                }, { error -> Log.d("Hello", "error") })
+//        )
         return arrayListOf(layout.getLayout(map))
     }
 }
