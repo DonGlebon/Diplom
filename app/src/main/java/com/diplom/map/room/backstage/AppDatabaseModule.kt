@@ -1,8 +1,8 @@
-package com.diplom.map.mvp.config.room.backstage
+package com.diplom.map.room.backstage
 
 import android.content.Context
 import androidx.room.Room
-import com.diplom.map.mvp.config.room.AppDatabase
+import com.diplom.map.room.AppDatabase
 import dagger.Module
 import dagger.Provides
 import javax.inject.Singleton

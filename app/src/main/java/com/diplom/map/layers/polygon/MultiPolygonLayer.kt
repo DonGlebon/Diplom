@@ -2,26 +2,23 @@ package com.diplom.map.layers.polygon
 
 import android.graphics.Color
 import android.util.Log
-import com.bbn.openmap.dataAccess.shape.ShapeUtils
-import com.bbn.openmap.layer.shape.ESRIPoly
-import com.bbn.openmap.layer.shape.ESRIPolygonRecord
-import com.bbn.openmap.layer.shape.ESRIRecord
-import com.bbn.openmap.layer.shape.ShapeFile
 import com.diplom.map.layers.GEOLayer
-import com.diplom.map.layers.utils.DbfReader
 import com.diplom.map.layers.utils.LayerUtils
+import com.diplom.map.room.AppDatabase
+import com.diplom.map.room.entities.Layer
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.model.*
 import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.schedulers.Schedulers
 import java.io.File
-import java.io.FileInputStream
 
 
 class MultiPolygonLayer(
     filename: String,
-    path: String
+    path: String,
+    private val db: AppDatabase
 ) :
     GEOLayer<MultiPolygonLayer> {
 
@@ -29,44 +26,115 @@ class MultiPolygonLayer(
     var multiPolygons = ArrayList<ShapeMultiPolygon>()
     private var polygonPoints = ArrayList<MyPoint>()
     private var textOverlays = ArrayList<GroundOverlay>()
+    private val dbDisposable = CompositeDisposable()
+
 
     init {
-        readShpFile(File("$path$filename.shp"))
-        readDbfFile(File("$path$filename.dbf"))
+        val layer = Layer(0, filename, path)
+//        dbDisposable.add(
+//            db.layerDao().insert(layer)
+//                .subscribeOn(Schedulers.io())
+//                .observeOn(AndroidSchedulers.mainThread())
+//                .subscribe(
+//                    {
+//                    },
+//                    { Log.d("Hello", "Error ${it.message}") }
+//                )
+//        )
+        dbDisposable.add(
+            db.layerDao().findLayerByName(filename)
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribeOn(Schedulers.io())
+                .subscribe({ Log.d("Hello", "Suc $it") },
+                    { Log.d("Hello", "Err ${it.message}") },
+                    { Log.d("Hello", "Comp") })
+        )
+        dbDisposable.add(
+            db.layerDao().getAll().observeOn(AndroidSchedulers.mainThread())
+                .subscribe {
+                    Log.d("Hello", "Count: ${it.size}")
+                }
+        )
+        //  readDbfFile(File("$path$filename.dbf"))
     }
+
 
     private fun readShpFile(file: File) {
-        var polygonCount = 0
-        try {
-            val shapeFile = ShapeFile(file)
-            var record: ESRIRecord? = shapeFile.nextRecord
-            while (record != null) {
-                if (ShapeUtils.getStringForType(record.shapeType) == "POLYGON") {
-                    val polygonRecord = record as ESRIPolygonRecord
-                    val multiPolygon = ShapeMultiPolygon()
-                    for (i in polygonRecord.polygons.indices) {
-                        val polygon = polygonRecord.polygons[i] as ESRIPoly.ESRIFloatPoly
-                        val shapePolygon = ShapePolygon()
-                        for (j in 0 until polygon.nPoints) {
-                            shapePolygon.addPoint(LatLng(polygon.getY(j), polygon.getX(j)))
-                        }
-                        polygonPoints.add(MyPoint(polygonCount, shapePolygon.points))
-                        multiPolygon.polygons.add(shapePolygon)
-                        polygonCount++
-                    }
-                    multiPolygons.add(multiPolygon)
-                }
-                record = shapeFile.nextRecord
-            }
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
+        val layerId = 0
+//        Log.d("Hello", "REad")
+
+
+//        val shapeFile = ShapeFile(file)
+//        var record: ESRIRecord? = shapeFile.nextRecord
+//        var mid = 0
+//        while (record != null) {
+//
+//            val multiPolygon = MultiPolygonData(0, layerId)
+//            if (ShapeUtils.getStringForType(record.shapeType) == "POLYGON") {
+//                val polygonRecord = record as ESRIPolygonRecord
+//                for (i in polygonRecord.polygons.indices) {
+//
+//                    val polygon = polygonRecord.polygons[i] as ESRIPoly.ESRIFloatPoly
+//                    for (j in 0 until polygon.nPoints) {
+//                        shapePolygon.addPoint(LatLng(polygon.getY(j), polygon.getX(j)))
+//                    }
+//                }
+//            }
+//            dbDisposable.add(
+//                db.multiPolygonDao().insert(multiPolygon)
+//                    .subscribeOn(Schedulers.io())
+//                    .observeOn(AndroidSchedulers.mainThread())
+//                    .subscribe()
+//            )
+//            mid++
+//            record = shapeFile.nextRecord
+
+        //     }
+
     }
 
+//    fun addMultiPolygon(uid: Int): Completable {
+//        val multiPolygon = MultiPolygonData(uid)
+//        return db.multiPolygonDao().insert(multiPolygon)
+//    }
+
+    //fun addPolygon(mpid: Int)
+
+//    private fun readShpFile(file: File) {
+//        var polygonCount = 0
+//        var roomMultiId = 0
+//        try {
+//            val shapeFile = ShapeFile(file)
+//            var record: ESRIRecord? = shapeFile.nextRecord
+//            while (record != null) {
+//                if (ShapeUtils.getStringForType(record.shapeType) == "POLYGON") {
+// val polygonRecord = record as ESRIPolygonRecord
+//                    val multiPolygon = ShapeMultiPolygon()
+//                    val roomMultyPolygon = MultiPolygonData(roomMultiId)
+//                    for (i in polygonRecord.polygons.indices) {
+//                        val polygon = polygonRecord.polygons[i] as ESRIPoly.ESRIFloatPoly
+//                        val shapePolygon = ShapePolygon()
+//                        for (j in 0 until polygon.nPoints) {
+//                            shapePolygon.addPoint(LatLng(polygon.getY(j), polygon.getX(j)))
+//                        }
+//                        polygonPoints.add(MyPoint(polygonCount, shapePolygon.points))
+//                        multiPolygon.polygons.add(shapePolygon)
+//                        polygonCount++
+//                    }
+//                    multiPolygons.add(multiPolygon)
+//                    roomMultiId++
+//                }
+//                record = shapeFile.nextRecord
+//            }
+//        } catch (e: Exception) {
+//            e.printStackTrace()
+//        }
+//    }
+
     private fun readDbfFile(file: File) {
-        val dbfStream = DbfReader(FileInputStream(file))
-        for (i in 0 until dbfStream.records.size)
-            multiPolygons[i].attributeSet = dbfStream.records[i] as ArrayList<Any>
+//        val dbfStream = DbfReader(FileInputStream(file))
+//        for (i in 0 until dbfStream.records.size)
+//            multiPolygons[i].attributeSet = dbfStream.records[i] as ArrayList<Any>
     }
 
     override fun updateVisibility(bounds: LatLngBounds, zoom: Float) {
@@ -149,7 +217,7 @@ class MultiPolygonLayer(
     }
 
     override fun getLayout(map: GoogleMap): MultiPolygonLayer {
-        draw(map)
+//        draw(map)
         //   drawText(map)
         return this
     }
