@@ -12,7 +12,7 @@ import com.diplom.map.room.entities.Point
 import com.diplom.map.room.entities.Polygon
 
 
-@Database(entities = [Layer::class, MultiPolygon::class, Polygon::class, Point::class], version = 2)
+@Database(entities = [Layer::class, MultiPolygon::class, Polygon::class, Point::class], version = 5)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun layerDao(): LayerDao
     abstract fun multiPolygonDao(): MultiPolygonDao

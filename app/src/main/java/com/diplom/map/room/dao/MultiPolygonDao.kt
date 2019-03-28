@@ -6,6 +6,7 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import com.diplom.map.room.entities.MultiPolygon
 import io.reactivex.Completable
+import io.reactivex.Flowable
 import io.reactivex.Single
 
 @Dao
@@ -17,7 +18,7 @@ interface MultiPolygonDao {
     fun insert(multiPolyons: List<MultiPolygon>): Single<List<Long>>
 
     @Query("Select * FROM MultiPolygon")
-    fun getAllMultiPolygons(): List<MultiPolygon>
+    fun getAllMultiPolygons(): Flowable<List<MultiPolygon>>
 
     @Query("Delete  FROM MultiPolygon WHERE lid = :lid ")
     fun deleteAll(lid: Long): Completable
