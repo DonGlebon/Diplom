@@ -3,13 +3,12 @@ package com.diplom.map.mvp.components.mapscreen.view
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.graphics.Color
 import android.os.Bundle
-import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
+import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
-import com.bbn.openmap.layer.shape.ESRIPointRecord
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import com.diplom.map.R
 import com.diplom.map.mvp.App
 import com.diplom.map.mvp.abstracts.view.BaseCompatActivity
@@ -20,9 +19,9 @@ import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
-import com.google.android.gms.maps.model.Circle
-import com.google.android.gms.maps.model.CircleOptions
 import com.google.android.gms.maps.model.LatLng
+import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.schedulers.Schedulers
 import javax.inject.Inject
 
 class MapActivity : BaseCompatActivity(), MapScreenContract.View, OnMapReadyCallback {
@@ -46,18 +45,8 @@ class MapActivity : BaseCompatActivity(), MapScreenContract.View, OnMapReadyCall
         mMap = googleMap
         val sydney = LatLng(53.551413, 27.057378)
         mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney))
-        val layers = presenter.getLayout(mMap)
-        mMap.setOnCameraIdleListener {
-            //            Observable.fromIterable(layers)
-//                .observeOn(AndroidSchedulers.mainThread())
-//                .subscribeOn(Schedulers.newThread())
-//                .doOnNext { it.updateVisibility(mMap.projection.visibleRegion.latLngBounds) }
-//                .subscribe()
-
-            for (layer in layers) {
-                layer.updateVisibility(mMap.projection.visibleRegion.latLngBounds, 1f)
-            }
-        }
+        // val layers = presenter.getLayout(mMap)
+        mMap.setOnCameraIdleListener {}
     }
 
     private fun setupPermissions() {
@@ -74,16 +63,6 @@ class MapActivity : BaseCompatActivity(), MapScreenContract.View, OnMapReadyCall
         }
     }
 
-    private fun drawESIRPoint(map: GoogleMap, point: ESRIPointRecord): Circle {
-        val polygonOptions = CircleOptions()
-            .strokeColor(Color.argb(150, 200, 0, 0))
-            .fillColor(Color.argb(150, 200, 0, 0))
-            .strokeWidth(20.0f)
-            .center(LatLng(point.y, point.x))
-            .radius(400.0)
-        return map.addCircle(polygonOptions)
-    }
-
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         menuInflater.inflate(R.menu.app_bar_map_menu, menu)
         return true
@@ -92,6 +71,24 @@ class MapActivity : BaseCompatActivity(), MapScreenContract.View, OnMapReadyCall
     override fun onOptionsItemSelected(item: MenuItem) = when (item.itemId) {
         R.id.action_layers -> {
             startActivity(Intent(this, LayerActivity::class.java))
+            true
+        }
+        R.id.action_select -> {
+            val bounds = mMap.projection.visibleRegion.latLngBounds
+            val north = bounds.northeast.latitude
+            val east = bounds.northeast.longitude
+            val south = bounds.southwest.latitude
+            val west = bounds.southwest.longitude
+            presenter.db.pointDao().getPointsInBounds(north, east, south, west)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(
+                    {
+                        Log.d("Hello", "Qury done")
+                        for (i in it)
+                            Log.d("Hello", "Pol Query: $i")
+                    },
+                    { Log.d("Hello", "Query err ${it.message}") })
             true
         }
         else -> {

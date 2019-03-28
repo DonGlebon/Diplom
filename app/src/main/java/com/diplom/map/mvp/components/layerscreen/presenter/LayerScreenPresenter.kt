@@ -121,17 +121,20 @@ class LayerScreenPresenter : BasePresenter<LayerScreenContract.View>(), LayerScr
             .subscribe(
                 { polygonList ->
                     val points = ArrayList<Point>()
-                    for (pol in shapePolygons)
-                        for (i in 0 until pol.polygons.size)
-                            for (point in pol.polygons[i].points)
+                    var polygonId = 0
+                    for (multiPolygon in shapePolygons)
+                        for (polygon in multiPolygon.polygons) {
+                            for (point in polygon.points)
                                 points.add(
                                     Point(
                                         0,
-                                        polygonList[i],
+                                        polygonList[polygonId],
                                         point.latitude,
                                         point.longitude
                                     )
                                 )
+                            polygonId++
+                        }
                     insertPointsToDatabase(points)
                 },
                 { Log.d("Hello", "Error 5w ${it.message}") }

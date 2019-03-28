@@ -5,9 +5,15 @@
 >
 
     <item
+            android:icon="@drawable/ic_add_white_48dp"
+            android:id="@+id/action_select"
+            android:title="Layers"
+            app:showAsAction="ifRoom"/>
+    <item
             android:icon="@drawable/ic_layers_white_48dp"
             android:id="@+id/action_layers"
             android:title="Layers"
             app:showAsAction="ifRoom"/>
+
 
 </menu>
