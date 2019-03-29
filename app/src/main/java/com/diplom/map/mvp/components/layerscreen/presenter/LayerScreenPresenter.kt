@@ -34,7 +34,7 @@ class LayerScreenPresenter : BasePresenter<LayerScreenContract.View>(), LayerScr
 
     override fun addLayer(file: File) {
         view!!.displayProgressBar(true)
-        addLayer("kvartal_zone", "/storage/emulated/0/Map/")
+        addLayer("vydel", "/storage/emulated/0/Map/")
     }
 
     private fun addLayer(name: String, path: String) {
