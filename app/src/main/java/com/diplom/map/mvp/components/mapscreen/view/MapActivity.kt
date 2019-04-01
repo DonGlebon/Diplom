@@ -3,9 +3,7 @@ package com.diplom.map.mvp.components.mapscreen.view
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.graphics.Color
 import android.os.Bundle
-import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import androidx.core.app.ActivityCompat
@@ -21,10 +19,7 @@ import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
-import com.google.android.gms.maps.model.PolygonOptions
-import io.reactivex.android.schedulers.AndroidSchedulers
-import io.reactivex.disposables.CompositeDisposable
-import io.reactivex.schedulers.Schedulers
+import com.google.android.gms.maps.model.TileOverlayOptions
 import javax.inject.Inject
 
 
@@ -47,68 +42,9 @@ class MapActivity : BaseCompatActivity(), MapScreenContract.View, OnMapReadyCall
 
     override fun onMapReady(googleMap: GoogleMap) {
         mMap = googleMap
-        val sydney = LatLng(53.551413, 27.057378)
+        val sydney = LatLng(53.5642900751534, 27.3724697498045)
         mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney))
-        mMap.setOnCameraIdleListener {
-            displayLayer()
-            Log.d("Hello", "Zoom: ${mMap.cameraPosition.zoom}")
-        }
-    }
-
-    val disposable = CompositeDisposable()
-
-    fun displayLayer() {
-        val s = System.currentTimeMillis()
-        val bounds = mMap.projection.visibleRegion.latLngBounds
-        val north = bounds.northeast.latitude
-        val east = bounds.northeast.longitude
-        val south = bounds.southwest.latitude
-        val west = bounds.southwest.longitude
-        if (mMap.cameraPosition.zoom > 15) {
-            disposable.add(presenter.db.pointDao().getPointsInBounds(north, east, south, west)
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribeOn(Schedulers.io())
-                .subscribe(
-                    { visiblePolygons ->
-                        presenter.db.polygonDao().getPolygonsWithPoints(visiblePolygons)
-                            .observeOn(AndroidSchedulers.mainThread())
-                            .subscribeOn(Schedulers.io())
-                            .subscribe(
-                                { pData ->
-                                    mMap.clear()
-                                    for (polygon in pData) {
-                                        val points = ArrayList<LatLng>()
-                                        for (point in polygon.points.sortedBy { it.uid }) {
-                                            points.add(
-                                                LatLng(
-                                                    point.Lat,
-                                                    point.Lng
-                                                )
-                                            )
-                                        }
-                                        mMap.addPolygon(
-                                            PolygonOptions()
-                                                .addAll(points)
-                                                .strokeColor(Color.argb(150, 20, 240, 40))
-                                                .fillColor(Color.argb(150, 140, 20, 140))
-                                                .strokeWidth(4.0f)
-                                                .geodesic(true)
-
-                                        )
-                                    }
-                                },
-                                {},
-                                {}
-                            )
-                    },
-                    { },
-                    {
-
-                    }
-                )
-            )
-        } else
-            mMap.clear()
+        mMap.addTileOverlay(TileOverlayOptions().tileProvider(presenter.getTileProvider()))
     }
 
     private fun setupPermissions() {
@@ -136,7 +72,6 @@ class MapActivity : BaseCompatActivity(), MapScreenContract.View, OnMapReadyCall
             true
         }
         R.id.action_select -> {
-
             true
         }
         else -> {

@@ -14,6 +14,8 @@ import com.diplom.map.mvp.components.layerscreen.contract.LayerScreenContract
 import com.diplom.map.mvp.components.layerscreen.presenter.LayerScreenPresenter
 import kotlinx.android.synthetic.main.activity_layer.*
 import java.io.File
+import java.net.URI
+import java.nio.file.Paths
 import javax.inject.Inject
 
 
@@ -62,10 +64,13 @@ class LayerActivity : BaseCompatActivity(), LayerScreenContract.View {
             val uri: Uri?
             if (resultData != null) {
                 uri = resultData.data
-                presenter.addLayer(File(uri.path))
+              //  Paths.get(uri)
+                val path = uri.path
+                presenter.addLayer(File(path))
             }
         }
     }
+
 
     override fun displayProgressBar(display: Boolean) {
         if (display)
@@ -76,4 +81,5 @@ class LayerActivity : BaseCompatActivity(), LayerScreenContract.View {
     companion object {
         private const val FILE_MANAGER_REQUEST_CODE = 20
     }
+
 }

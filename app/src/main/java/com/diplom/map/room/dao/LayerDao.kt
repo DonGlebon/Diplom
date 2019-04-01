@@ -4,6 +4,7 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import com.diplom.map.room.data.LayerData
 import com.diplom.map.room.entities.Layer
 import io.reactivex.Flowable
 import io.reactivex.Maybe
@@ -27,5 +28,8 @@ interface LayerDao {
 
     @Query("SELECT * FROM layer")
     fun getAll(): Flowable<List<Layer>>
+
+    @Query("SELECT uid FROM Layer WHERE uid = :layerId")
+    fun getLayerData(layerId: Long): Single<LayerData>
 
 }

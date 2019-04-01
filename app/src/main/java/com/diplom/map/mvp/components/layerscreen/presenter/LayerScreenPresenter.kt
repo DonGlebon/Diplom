@@ -1,5 +1,6 @@
 package com.diplom.map.mvp.components.layerscreen.presenter
 
+import android.os.Environment
 import android.util.Log
 import com.bbn.openmap.dataAccess.shape.ShapeUtils
 import com.bbn.openmap.layer.shape.ESRIPoly
@@ -21,10 +22,11 @@ import io.reactivex.schedulers.Schedulers
 import java.io.File
 import javax.inject.Inject
 
+
 class LayerScreenPresenter : BasePresenter<LayerScreenContract.View>(), LayerScreenContract.Presenter {
 
     init {
-        App.get().dbInjector.inject(this)
+        App.get().injector.inject(this)
     }
 
     @Inject
@@ -34,7 +36,15 @@ class LayerScreenPresenter : BasePresenter<LayerScreenContract.View>(), LayerScr
 
     override fun addLayer(file: File) {
         view!!.displayProgressBar(true)
-        addLayer("vydel", "/storage/emulated/0/Map/")
+        val path = file.absoluteFile.absolutePath
+        val filename = path.substring(path.lastIndexOf('/') + 1).substringBefore('.')
+        val uriPath = path.substringBefore(':')
+        val pp = path.substring(path.lastIndexOf(':') + 1, path.lastIndexOf('/'))
+        val filepath = if (uriPath.toLowerCase().contains("primary"))
+            "/storage/emulated/0/$pp/"
+        else
+            "${Environment.getExternalStorageDirectory()}/"
+        addLayer(filename, filepath)
     }
 
     private fun addLayer(name: String, path: String) {
@@ -126,7 +136,7 @@ class LayerScreenPresenter : BasePresenter<LayerScreenContract.View>(), LayerScr
                         for (polygon in multiPolygon.polygons) {
                             for (point in polygon.points)
                                 points.add(
-                                    Point(
+                                    com.diplom.map.room.entities.Point(
                                         0,
                                         polygonList[polygonId],
                                         point.latitude,

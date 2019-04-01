@@ -4,7 +4,7 @@ import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
 
-@Entity(indices = [Index(value = ["name", "path"], unique = true)])
+@Entity(indices = [Index(value = ["uid", "name"], unique = true)])
 data class Layer(
     @PrimaryKey(autoGenerate = true)
     val uid: Long,

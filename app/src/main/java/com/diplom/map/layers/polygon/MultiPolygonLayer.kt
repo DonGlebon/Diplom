@@ -5,7 +5,6 @@ import android.util.Log
 import com.diplom.map.layers.GEOLayer
 import com.diplom.map.layers.utils.LayerUtils
 import com.diplom.map.room.AppDatabase
-import com.diplom.map.room.entities.Layer
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.model.*
 import io.reactivex.Observable
@@ -17,7 +16,7 @@ import java.io.File
 
 class MultiPolygonLayer(
     filename: String,
-    path: String,
+
     private val db: AppDatabase
 ) :
     GEOLayer<MultiPolygonLayer> {
@@ -30,17 +29,6 @@ class MultiPolygonLayer(
 
 
     init {
-        val layer = Layer(0, filename, path)
-//        dbDisposable.add(
-//            db.layerDao().insert(layer)
-//                .subscribeOn(Schedulers.io())
-//                .observeOn(AndroidSchedulers.mainThread())
-//                .subscribe(
-//                    {
-//                    },
-//                    { Log.d("Hello", "Error ${it.message}") }
-//                )
-//        )
         dbDisposable.add(
             db.layerDao().findLayerByName(filename)
                 .observeOn(AndroidSchedulers.mainThread())
@@ -60,7 +48,6 @@ class MultiPolygonLayer(
 
 
     private fun readShpFile(file: File) {
-        val layerId = 0
 //        Log.d("Hello", "REad")
 
 
@@ -131,11 +118,11 @@ class MultiPolygonLayer(
 //        }
 //    }
 
-    private fun readDbfFile(file: File) {
-//        val dbfStream = DbfReader(FileInputStream(file))
-//        for (i in 0 until dbfStream.records.size)
-//            multiPolygons[i].attributeSet = dbfStream.records[i] as ArrayList<Any>
-    }
+//    private fun readDbfFile(file: File) {
+////        val dbfStream = DbfReader(FileInputStream(file))
+////        for (i in 0 until dbfStream.records.size)
+////            multiPolygons[i].attributeSet = dbfStream.records[i] as ArrayList<Any>
+//    }
 
     override fun updateVisibility(bounds: LatLngBounds, zoom: Float) {
         updatePolygonVisibility(bounds)
