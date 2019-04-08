@@ -1,7 +1,10 @@
 package com.diplom.map.room.entities
 
-import androidx.room.*
+import androidx.room.ColumnInfo
+import androidx.room.Entity
+import androidx.room.ForeignKey
 import androidx.room.ForeignKey.CASCADE
+import androidx.room.PrimaryKey
 
 @Entity(
     foreignKeys = [ForeignKey(
@@ -10,8 +13,7 @@ import androidx.room.ForeignKey.CASCADE
         childColumns = arrayOf("pid"),
         onDelete = CASCADE,
         onUpdate = CASCADE
-    )],
-    indices = [Index(value = ["pid", "Lat", "Lng"], unique = true)]
+    )]
 )
 data class Point(
     @PrimaryKey(autoGenerate = true) var uid: Long,

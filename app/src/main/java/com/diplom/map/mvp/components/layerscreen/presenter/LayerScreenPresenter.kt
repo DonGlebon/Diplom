@@ -10,12 +10,12 @@ import com.bbn.openmap.layer.shape.ShapeFile
 import com.diplom.map.mvp.App
 import com.diplom.map.mvp.abstracts.presenter.BasePresenter
 import com.diplom.map.mvp.components.layerscreen.contract.LayerScreenContract
+import com.diplom.map.mvp.components.layerscreen.model.MultiPolygonData
+import com.diplom.map.mvp.components.layerscreen.model.PolygonData
 import com.diplom.map.room.AppDatabase
 import com.diplom.map.room.entities.Layer
-import com.diplom.map.room.entities.MultiPolygon
-import com.diplom.map.room.entities.Point
-import com.diplom.map.room.entities.Polygon
 import com.google.android.gms.maps.model.LatLng
+import io.reactivex.Single
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.schedulers.Schedulers
@@ -25,16 +25,29 @@ import javax.inject.Inject
 
 class LayerScreenPresenter : BasePresenter<LayerScreenContract.View>(), LayerScreenContract.Presenter {
 
+    @Inject
+    lateinit var db: AppDatabase
+    private val disposable = CompositeDisposable()
+
     init {
         App.get().injector.inject(this)
     }
 
-    @Inject
-    lateinit var db: AppDatabase
+    fun onRecyclerIsReady() {
+        displayLayers()
+    }
 
-    private val disposable = CompositeDisposable()
+    private fun displayLayers() {
+        disposable.add(db.layerDao().getLayers()
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .doOnNext { view!!.addLayerToRecycler(it as ArrayList<Layer>) }
+            .doOnError { Log.d("Hello", "Get layers error: ${it.message}") }
+            .subscribe()
+        )
+    }
 
-    override fun addLayer(file: File) {
+    override fun addNewLayer(file: File) {
         view!!.displayProgressBar(true)
         val path = file.absoluteFile.absolutePath
         val filename = path.substring(path.lastIndexOf('/') + 1).substringBefore('.')
@@ -47,120 +60,19 @@ class LayerScreenPresenter : BasePresenter<LayerScreenContract.View>(), LayerScr
         addLayer(filename, filepath)
     }
 
-    private fun addLayer(name: String, path: String) {
-        disposable.add(db.layerDao().findLayerByName(name)
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribe(
-                { addPolygons(it) },
-                { Log.d("Hello", "Find layer error: ${it.message}") },
-                { insertLayerToDatabase(name, path) }
-            )
-        )
+    private fun insertLayer(filename: String, filepath: String): Boolean {
+        db.globalDao().insertShapeFileData(filename, filepath, readShapeFile(filename, filepath))
+        return true
     }
 
-    private fun insertLayerToDatabase(name: String, path: String) {
-        disposable.add(db.layerDao().insert(Layer(0, name, path))
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribe(
-                { addPolygons(it) },
-                { Log.d("Hello", "Insert err") }
-            )
-        )
-    }
 
-    private fun addPolygons(lid: Long) {
-        disposable.add(db.layerDao().getLayerById(lid)
+    private fun addLayer(filename: String, filepath: String) {
+        disposable.add(Single.defer { Single.just(insertLayer(filename, filepath)) }
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
-            .subscribe(
-                { layer ->
-                    val shapePolygons = readShapeFile(layer.name, layer.path)
-                    val multiPolygons = ArrayList<MultiPolygon>()
-                    for (i in 0 until shapePolygons.size)
-                        multiPolygons.add(MultiPolygon(0, lid))
-                    clearOldLayerData(layer.uid, multiPolygons, shapePolygons)
-                },
-                { Log.d("Hello", "Error 3 ${it.message}") }
-            )
-        )
-    }
-
-    private fun clearOldLayerData(
-        lid: Long,
-        multiPolygons: ArrayList<MultiPolygon>,
-        shapePolygons: ArrayList<MultiPolygonData>
-    ) {
-        disposable.add(db.multiPolygonDao().deleteAll(lid)
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribe
-            { insertMultiPolygonsToDatabase(multiPolygons, shapePolygons) }
-        )
-    }
-
-    private fun insertMultiPolygonsToDatabase(
-        multiPolygons: ArrayList<MultiPolygon>,
-        shapePolygons: ArrayList<MultiPolygonData>
-    ) {
-        disposable.add(db.multiPolygonDao().insert(multiPolygons)
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribe(
-                { multiPolygonList ->
-                    val polygons = ArrayList<Polygon>()
-                    for (i in 0 until shapePolygons.size) {
-                        for (j in 0 until shapePolygons[i].polygons.size)
-                            polygons.add(Polygon(0, multiPolygonList[i]))
-                    }
-                    insertPolygonsToDatabase(polygons, shapePolygons)
-                },
-                { Log.d("Hello", "Error 4 ${it.message}") }
-            )
-        )
-    }
-
-    private fun insertPolygonsToDatabase(
-        polygons: ArrayList<Polygon>,
-        shapePolygons: ArrayList<MultiPolygonData>
-    ) {
-        disposable.add(db.polygonDao().insert(polygons)
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribe(
-                { polygonList ->
-                    val points = ArrayList<Point>()
-                    var polygonId = 0
-                    for (multiPolygon in shapePolygons)
-                        for (polygon in multiPolygon.polygons) {
-                            for (point in polygon.points)
-                                points.add(
-                                    com.diplom.map.room.entities.Point(
-                                        0,
-                                        polygonList[polygonId],
-                                        point.latitude,
-                                        point.longitude
-                                    )
-                                )
-                            polygonId++
-                        }
-                    insertPointsToDatabase(points)
-                },
-                { Log.d("Hello", "Error 5w ${it.message}") }
-            )
-        )
-    }
-
-    private fun insertPointsToDatabase(points: ArrayList<Point>) {
-        disposable.add(db.pointDao().insert(points)
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribe(
-                { view!!.displayProgressBar(false) },
-                { Log.d("Hello", "Error 6 ${it.message}") }
-            )
-        )
+            .doOnSuccess { view!!.displayProgressBar(false) }
+            .doOnError { Log.d("Hello", "Error: ${it.message}") }
+            .subscribe())
     }
 
     private fun readShapeFile(name: String, path: String): ArrayList<MultiPolygonData> {
@@ -192,18 +104,5 @@ class LayerScreenPresenter : BasePresenter<LayerScreenContract.View>(), LayerScr
         return multiPolygons
     }
 
-    class MultiPolygonData {
-        val polygons = ArrayList<PolygonData>()
-        fun addPolygon(polygon: PolygonData) {
-            polygons.add(polygon)
-        }
-
-    }
-
-    class PolygonData {
-        val points = ArrayList<LatLng>()
-        fun addPoint(point: LatLng) {
-            points.add(point)
-        }
-    }
 }
+

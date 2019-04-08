@@ -1,4 +1,8 @@
 <resources>
     <string name="app_name">My Application</string>
     <string name="title_activity_maps">Map</string>
+    <string name="layer_name">Слой:
+        <b>%1$s</b>
+    </string>
+    <string name="layer_path">%1$s</string>
 </resources>

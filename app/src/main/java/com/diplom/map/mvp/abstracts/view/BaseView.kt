@@ -10,4 +10,6 @@ interface BaseView {
     }
 
     fun getContext(): Context
+
+
 }

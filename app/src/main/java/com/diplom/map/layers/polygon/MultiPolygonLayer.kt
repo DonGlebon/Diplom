@@ -37,12 +37,12 @@ class MultiPolygonLayer(
                     { Log.d("Hello", "Err ${it.message}") },
                     { Log.d("Hello", "Comp") })
         )
-        dbDisposable.add(
-            db.layerDao().getAll().observeOn(AndroidSchedulers.mainThread())
-                .subscribe {
-                    Log.d("Hello", "Count: ${it.size}")
-                }
-        )
+//        dbDisposable.add(
+//            db.layerDao().getLayers().observeOn(AndroidSchedulers.mainThread())
+//                .subscribe {
+//                    Log.d("Hello", "Count: ${it.size}")
+//                }
+        //    )
         //  readDbfFile(File("$path$filename.dbf"))
     }
 

@@ -7,15 +7,16 @@ import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
 import android.widget.ProgressBar
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.diplom.map.R
 import com.diplom.map.mvp.App
 import com.diplom.map.mvp.abstracts.view.BaseCompatActivity
 import com.diplom.map.mvp.components.layerscreen.contract.LayerScreenContract
+import com.diplom.map.mvp.components.layerscreen.model.LayerRecyclerViewAdapter
 import com.diplom.map.mvp.components.layerscreen.presenter.LayerScreenPresenter
+import com.diplom.map.room.entities.Layer
 import kotlinx.android.synthetic.main.activity_layer.*
 import java.io.File
-import java.net.URI
-import java.nio.file.Paths
 import javax.inject.Inject
 
 
@@ -24,14 +25,29 @@ class LayerActivity : BaseCompatActivity(), LayerScreenContract.View {
     @Inject
     lateinit var presenter: LayerScreenPresenter
 
+    private var layerList = ArrayList<Layer>()
+    private val adapter = LayerRecyclerViewAdapter(layerList, this)
+
     override fun init(savedInstanceState: Bundle?) {
         setContentView(R.layout.activity_layer)
         setSupportActionBar(findViewById(R.id.toolBar))
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         App.get().injector.inject(this)
         presenter.attach(this)
+        initRecyclerView()
     }
 
+    private fun initRecyclerView() {
+        recyclerView.layoutManager = LinearLayoutManager(this)
+        recyclerView.adapter = adapter
+        presenter.onRecyclerIsReady()
+    }
+
+    override fun addLayerToRecycler(layers: ArrayList<Layer>) {
+        layerList.clear()
+        layerList.addAll(layers)
+        adapter.notifyDataSetChanged()
+    }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         menuInflater.inflate(R.menu.app_bar_layers_menu, menu)
@@ -64,13 +80,11 @@ class LayerActivity : BaseCompatActivity(), LayerScreenContract.View {
             val uri: Uri?
             if (resultData != null) {
                 uri = resultData.data
-              //  Paths.get(uri)
                 val path = uri.path
-                presenter.addLayer(File(path))
+                presenter.addNewLayer(File(path))
             }
         }
     }
-
 
     override fun displayProgressBar(display: Boolean) {
         if (display)

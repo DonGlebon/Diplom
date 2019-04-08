@@ -27,7 +27,10 @@ interface LayerDao {
     fun getLayerById(lid: Long): Single<Layer>
 
     @Query("SELECT * FROM layer")
-    fun getAll(): Flowable<List<Layer>>
+    fun getDataLayers(): Flowable<List<LayerData>>
+
+    @Query("SELECT * FROM layer")
+    fun getLayers(): Flowable<List<Layer>>
 
     @Query("SELECT uid FROM Layer WHERE uid = :layerId")
     fun getLayerData(layerId: Long): Single<LayerData>

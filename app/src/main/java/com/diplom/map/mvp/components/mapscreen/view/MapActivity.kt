@@ -20,6 +20,7 @@ import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.TileOverlayOptions
+import com.google.android.gms.maps.model.TileProvider
 import javax.inject.Inject
 
 
@@ -28,6 +29,7 @@ class MapActivity : BaseCompatActivity(), MapScreenContract.View, OnMapReadyCall
     @Inject
     lateinit var presenter: MapScreenPresenter
     private lateinit var mMap: GoogleMap
+
 
     override fun init(savedInstanceState: Bundle?) {
         setContentView(R.layout.activity_maps)
@@ -44,7 +46,15 @@ class MapActivity : BaseCompatActivity(), MapScreenContract.View, OnMapReadyCall
         mMap = googleMap
         val sydney = LatLng(53.5642900751534, 27.3724697498045)
         mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney))
-        mMap.addTileOverlay(TileOverlayOptions().tileProvider(presenter.getTileProvider()))
+        presenter.mapReady()
+    }
+
+    override fun addTileProvidersToMap(provider: TileProvider) {
+        mMap.addTileOverlay(
+            TileOverlayOptions()
+                .fadeIn(true)
+                .tileProvider(provider)
+        )
     }
 
     private fun setupPermissions() {
