@@ -1,11 +1,15 @@
 <resources>
     <!-- Base application theme. -->
-    <style name="AppTheme" parent="Theme.AppCompat.Light.NoActionBar">
+    <style name="AppTheme" parent="Theme.MaterialComponents.Light.NoActionBar">
         <!-- Customize your theme here. -->
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>
         <item name="homeAsUpIndicator">@drawable/ic_arrow_back_white_36dp</item>
+    </style>
+
+    <style name="AppCompatAlertDialogStyle" parent="Theme.MaterialComponents.Light.Dialog.Alert">
+        <item name="buttonStyle">@style/Widget.MaterialComponents.Button.TextButton</item>
     </style>
 
 </resources>

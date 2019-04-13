@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              xmlns:app="http://schemas.android.com/apk/res-auto"
+              android:orientation="vertical"
+              android:focusableInTouchMode="true"
+              android:layout_width="match_parent"
+              android:layout_height="wrap_content">
+    <com.google.android.material.textfield.TextInputLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" android:textColorHint="@color/colorAccent" app:hintEnabled="true"
+            app:hintAnimationEnabled="true" android:hint="Z Index" app:helperTextEnabled="true"
+            app:boxStrokeColor="@color/colorAccent" app:boxStrokeWidth="2dp" app:boxBackgroundMode="outline"
+            android:layout_weight="1" android:layout_margin="8dp">
+        <com.google.android.material.textfield.TextInputEditText
+                android:nextFocusDown="@id/minZoomEdit"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" android:layout_margin="8dp"
+                android:minWidth="120dp" android:inputType="number" android:selectAllOnFocus="false"/>
+    </com.google.android.material.textfield.TextInputLayout>
+    <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal" android:layout_weight="1" android:layout_margin="8dp">
+        <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/minZoomEdit"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" android:layout_weight="1"
+                app:hintAnimationEnabled="true" android:hint="Min Zoom"
+                android:textColorHint="@color/colorAccent"
+                app:boxStrokeColor="@color/colorAccent" app:boxStrokeWidth="2dp" app:boxBackgroundMode="outline"
+                app:errorEnabled="true" app:hintEnabled="true">
+            <com.google.android.material.textfield.TextInputEditText
+                    android:layout_width="wrap_content"
+                    android:nextFocusDown="@id/maxZoomEdit"
+                    android:layout_height="wrap_content" android:layout_margin="8dp"
+                    android:selectAllOnFocus="false" android:singleLine="true" android:minWidth="120dp"
+                    android:inputType="numberDecimal" android:layout_weight="2" android:id="@+id/textInputEditText"/>
+        </com.google.android.material.textfield.TextInputLayout>
+        <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/maxZoomEdit"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColorHint="@color/colorAccent" app:hintEnabled="true" app:hintAnimationEnabled="true"
+                android:hint="Max Zoom" android:layout_weight="1" app:boxStrokeWidth="2dp"
+                app:boxStrokeColor="@color/colorAccent"
+                app:boxBackgroundMode="outline"
+                app:errorEnabled="true">
+            <com.google.android.material.textfield.TextInputEditText
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" android:singleLine="true"
+                    android:layout_margin="8dp" android:minWidth="120dp" android:inputType="numberDecimal"
+            />
+        </com.google.android.material.textfield.TextInputLayout>
+    </LinearLayout>
+    <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" android:layout_weight="1" android:layout_marginLeft="8dp"
+            android:layout_marginRight="8dp">
+        <Button
+                android:text="Редактировать"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" android:id="@+id/editLayerButton" android:layout_weight="1"
+                style="@style/Widget.MaterialComponents.Button.TextButton" android:visibility="visible"
+                android:layout_gravity="right"
+                app:icon="@drawable/ic_mode_edit" android:textSize="10sp"/>
+        <Button
+                android:text="Удалить"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" android:id="@+id/removeLayerButton" android:layout_weight="1"
+                style="@style/Widget.MaterialComponents.Button.TextButton" android:visibility="visible"
+                android:layout_gravity="right"
+                app:icon="@drawable/ic_delete" android:textSize="10sp"/>
+    </LinearLayout>
+    <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" android:layout_weight="1" android:visibility="gone"
+    >
+        <Button
+                android:text="Сохранить"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" android:id="@+id/ApplyChanges" android:layout_weight="1"
+                style="@style/Widget.MaterialComponents.Button.TextButton" android:visibility="visible"
+                android:layout_gravity="right"
+                app:icon="@drawable/ic_done" android:textSize="10sp"/>
+        <Button
+                android:text="Отмена"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" android:id="@+id/removeChanges" android:layout_weight="1"
+                style="@style/Widget.MaterialComponents.Button.TextButton" android:visibility="visible"
+                android:layout_gravity="right"
+                app:icon="@drawable/ic_clear" android:textSize="10sp"/>
+    </LinearLayout>
+
+</LinearLayout>

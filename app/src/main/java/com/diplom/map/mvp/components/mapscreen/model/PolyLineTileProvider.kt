@@ -1,7 +1,6 @@
 package com.diplom.map.mvp.components.mapscreen.model
 
 import android.graphics.*
-import android.util.Log
 import com.diplom.map.room.data.LayerData
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.Tile
@@ -9,26 +8,22 @@ import com.google.android.gms.maps.model.TileProvider
 import com.google.maps.android.projection.SphericalMercatorProjection
 import java.io.ByteArrayOutputStream
 
-class MultiPolygonTileProvider : TileProvider {
+class PolyLineTileProvider : TileProvider {
 
     private val mTileSize = 512
     private val mProjection = SphericalMercatorProjection(mTileSize.toDouble())
-    private var mScale = 1f
-    private val mDimension = (mScale * mTileSize).toInt()
-    private var polygonsBounds = ArrayList<PolygonBounds>()
+    private val mScale = 2
+    private var mDimension = mScale * mTileSize
+    private var mPath = Path()
     private var oldZoom = -1
-    private var baseStrokeWidth = .000035f * ((mTileSize / 512) * mScale)
-    private val paintFill = Paint().apply {
-        style = Paint.Style.FILL
-        color = Color.argb(150, 100, 20, 200)
-    }
     private val paintStroke = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         style = Paint.Style.STROKE
-        color = Color.rgb(40, 250, 30)
+        color = Color.rgb(20, 250, 150)
+        strokeWidth = .0000325f
         strokeJoin = Paint.Join.ROUND
         strokeCap = Paint.Cap.ROUND
     }
-    private var mPath = Path()
+
 
     override fun getTile(x: Int, y: Int, zoom: Int): Tile {
         val scale = Math.pow(2.0, zoom.toDouble()).toFloat() * mScale
@@ -45,7 +40,6 @@ class MultiPolygonTileProvider : TileProvider {
             updateStrokeWidth(zoom)
         else
             oldZoom = zoom
-        canvas.drawPath(mPath, paintFill)
         canvas.drawPath(mPath, paintStroke)
         val baos = ByteArrayOutputStream()
         bitmap.compress(Bitmap.CompressFormat.PNG, 100, baos)
@@ -54,7 +48,7 @@ class MultiPolygonTileProvider : TileProvider {
 
     private fun updateStrokeWidth(zoom: Int) {
         val strokeWidth = .0000002f * Math.pow(2.0, (23 - zoom).toDouble()).toFloat()
-        paintStroke.strokeWidth = if (strokeWidth < baseStrokeWidth) baseStrokeWidth else strokeWidth
+        paintStroke.strokeWidth = if (strokeWidth < .000035f) .000035f else strokeWidth
     }
 
     private fun getPath(multiPolygons: ArrayList<ProjectionMultiPolygon>): Path {
@@ -62,18 +56,11 @@ class MultiPolygonTileProvider : TileProvider {
         for (multiPolygon in multiPolygons) {
             for (polygon in multiPolygon.polygons) {
                 val polygonPath = Path()
-                polygonPath.incReserve(polygon.points.size)
                 val points = polygon.points
                 polygonPath.moveTo(points[0].x, points[0].y)
-                for (i in 0 until points.size) {
+                for (i in 1 until points.size) {
                     polygonPath.lineTo(points[i].x, points[i].y)
                 }
-                polygonPath.close()
-                val bounds = RectF()
-                polygonPath.computeBounds(bounds, false)
-                polygonsBounds.add(
-                    PolygonBounds(polygon.uid, bounds)
-                )
                 path.addPath(polygonPath)
             }
         }
@@ -102,13 +89,6 @@ class MultiPolygonTileProvider : TileProvider {
         return mPolygons
     }
 
-    fun getPolygonByClick(position: LatLng) {
-        val point = mProjection.toPoint(position)
-        for (polygonBounds in polygonsBounds)
-            if (polygonBounds.bounds.contains(point.x.toFloat(), point.y.toFloat()))
-                Log.d("Hello", "Polygon: ${polygonBounds.uid}")
-    }
-
     private class ProjectionMultiPolygon {
         var polygons = ArrayList<ProjectionPolygon>()
         fun add(polygon: ProjectionPolygon) {
@@ -128,7 +108,4 @@ class MultiPolygonTileProvider : TileProvider {
         val x: Float,
         val y: Float
     )
-
-    private data class PolygonBounds(val uid: Long, val bounds: RectF)
-
 }

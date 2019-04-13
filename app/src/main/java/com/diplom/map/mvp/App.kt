@@ -1,6 +1,8 @@
 package com.diplom.map.mvp
 
 import android.app.Application
+import com.diplom.map.mvp.components.fragments.layer.backstage.LayerFragmentModule
+import com.diplom.map.mvp.components.fragments.map.backstage.MapFragmentModule
 import com.diplom.map.mvp.components.layerscreen.backstage.LayerScreenModule
 import com.diplom.map.mvp.components.mapscreen.backstage.MapScreenModule
 import com.diplom.map.mvp.config.di.AppDiComponent
@@ -16,7 +18,9 @@ class App : Application() {
         INSTANCE = this
         injector = DaggerAppDiComponent.builder()
             .mapScreenModule(MapScreenModule())
+            .mapFragmentModule(MapFragmentModule())
             .layerScreenModule(LayerScreenModule())
+            .layerFragmentModule(LayerFragmentModule())
             .appDatabaseModule(AppDatabaseModule(this))
             .build()
     }

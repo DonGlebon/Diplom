@@ -80,8 +80,9 @@ class LayerScreenPresenter : BasePresenter<LayerScreenContract.View>(), LayerScr
         try {
             val shapeFile = ShapeFile(File("${path + name}.shp"))
             var record: ESRIRecord? = shapeFile.nextRecord
+            val s = ShapeUtils.getStringForType(record!!.shapeType)
             while (record != null) {
-                if (ShapeUtils.getStringForType(record.shapeType) == "POLYGON") {
+                if (ShapeUtils.getStringForType(record.shapeType) == "POLYLINE" || ShapeUtils.getStringForType(record.shapeType) == "POLYGON") {
                     val multiPolygonRecord = record as ESRIPolygonRecord
                     val multiPolygon =
                         MultiPolygonData()
