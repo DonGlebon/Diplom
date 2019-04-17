@@ -9,8 +9,8 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentTransaction
-import com.diplom.map.mvp.components.fragments.layer.view.LayerFragment
-import com.diplom.map.mvp.components.fragments.map.view.MapFragment
+import com.diplom.map.mvp.components.layer.view.LayerFragment
+import com.diplom.map.mvp.components.map.view.MapFragment
 import kotlinx.android.synthetic.main.activity_main.*
 
 class MainActivity : AppCompatActivity() {

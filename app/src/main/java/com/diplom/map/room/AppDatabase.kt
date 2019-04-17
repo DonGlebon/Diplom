@@ -2,7 +2,10 @@ package com.diplom.map.room
 
 import androidx.room.Database
 import androidx.room.RoomDatabase
-import com.diplom.map.room.dao.*
+import com.diplom.map.room.dao.FeatureDataDao
+import com.diplom.map.room.dao.FeatureStyleDao
+import com.diplom.map.room.dao.GlobalDao
+import com.diplom.map.room.dao.LayerDao
 import com.diplom.map.room.entities.*
 
 
@@ -18,9 +21,6 @@ import com.diplom.map.room.entities.*
 )
 abstract class AppDatabase : RoomDatabase() {
     abstract fun layerDao(): LayerDao
-    abstract fun multiPolygonDao(): MultiPolygonDao
-    abstract fun polygonDao(): PolygonDao
-    abstract fun pointDao(): PointDao
     abstract fun globalDao(): GlobalDao
     abstract fun featureDataDao(): FeatureDataDao
     abstract fun featureStyleDao(): FeatureStyleDao

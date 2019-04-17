@@ -20,26 +20,12 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
-        <activity
-                android:name=".mvp.components.layerscreen.view.LayerActivity"
-                android:label="Layer activity"
-                android:parentActivityName=".mvp.components.mapscreen.view.MapActivity">
-            <meta-data
-                    android:name="android.support.PARENT_ACTIVITY"
-                    android:value="com.diplom.map.mvp.components.mapscreen.view.MapActivity"/>
-        </activity>
-
         <meta-data
                 android:name="com.google.android.geo.API_KEY"
                 android:value="@string/google_maps_key"/>
         <meta-data
                 android:name="preloaded_fonts"
                 android:resource="@array/preloaded_fonts"/>
-
-        <activity
-                android:name=".mvp.components.mapscreen.view.MapActivity"
-                android:label="@string/title_activity_maps">
-        </activity>
     </application>
 
 </manifest>

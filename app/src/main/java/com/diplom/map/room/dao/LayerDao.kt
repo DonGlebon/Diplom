@@ -12,26 +12,14 @@ import io.reactivex.*
 @Dao
 interface LayerDao {
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    fun insert(layer: Layer): Single<Long>
-
-    @Insert
-    fun insert(layers: List<Layer>): Single<List<Long>>
-
     @Query("SELECT uid FROM Layers WHERE filename = :filename")
     fun findLayerByName(filename: String): Maybe<Long>
-
-    @Query("SELECT * FROM Layers WHERE uid = :lid LIMIT 1")
-    fun getLayerById(lid: Long): Single<Layer>
 
     @Query("SELECT * FROM layers")
     fun getDataLayers(): Observable<List<LayerData>>
 
     @Query("SELECT * FROM Layers")
     fun getLayers(): Flowable<List<LayerVisibility>>
-
-//    @Query("SELECT uid, GeometryType FROM Layers WHERE uid = :layerId")
-//    fun getLayerDataByID(layerId: Long): Single<LayerData>
 
     @Query("UPDATE Layers SET ZIndex = :zIndex,  minZoom = :minZoom, maxZoom = :maxZoom WHERE uid = :uid")
     fun updateLayerVisibility(uid: Long, zIndex: Int, minZoom: Int, maxZoom: Int): Completable
