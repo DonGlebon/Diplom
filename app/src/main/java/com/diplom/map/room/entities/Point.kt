@@ -1,23 +1,23 @@
 package com.diplom.map.room.entities
 
-import androidx.room.ColumnInfo
-import androidx.room.Entity
-import androidx.room.ForeignKey
+import androidx.room.*
 import androidx.room.ForeignKey.CASCADE
-import androidx.room.PrimaryKey
 
 @Entity(
+    tableName = "Points",
     foreignKeys = [ForeignKey(
-        entity = Polygon::class,
+        entity = SubFeature::class,
         parentColumns = arrayOf("uid"),
-        childColumns = arrayOf("pid"),
+        childColumns = arrayOf("SubFeatureID"),
         onDelete = CASCADE,
         onUpdate = CASCADE
-    )]
+    )],
+    indices = [Index("SubFeatureID")]
 )
 data class Point(
     @PrimaryKey(autoGenerate = true) var uid: Long,
-    val pid: Long,
+    @ColumnInfo(name = "SubFeatureID")
+    val sfid: Long,
     @ColumnInfo(name = "Lat")
     var lat: Double,
     @ColumnInfo(name = "Lng")

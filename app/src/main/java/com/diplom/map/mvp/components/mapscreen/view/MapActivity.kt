@@ -13,6 +13,7 @@ import com.diplom.map.mvp.App
 import com.diplom.map.mvp.abstracts.view.BaseCompatActivity
 import com.diplom.map.mvp.components.layerscreen.view.LayerActivity
 import com.diplom.map.mvp.components.mapscreen.contract.MapScreenContract
+import com.diplom.map.esri.model.ESRITileProvider
 import com.diplom.map.mvp.components.mapscreen.presenter.MapScreenPresenter
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
@@ -20,7 +21,6 @@ import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.TileOverlayOptions
-import com.google.android.gms.maps.model.TileProvider
 import javax.inject.Inject
 
 
@@ -49,12 +49,12 @@ class MapActivity : BaseCompatActivity(), MapScreenContract.View, OnMapReadyCall
         presenter.mapReady()
     }
 
-    override fun addTileProvidersToMap(provider: TileProvider) {
-        mMap.addTileOverlay(
-            TileOverlayOptions()
-                .fadeIn(true)
-                .tileProvider(provider)
-        )
+    override fun addTileProvider(provider: ESRITileProvider) {
+            mMap.addTileOverlay(
+                TileOverlayOptions()
+                    .fadeIn(true)
+                    .tileProvider(provider)
+            )
     }
 
     private fun setupPermissions() {

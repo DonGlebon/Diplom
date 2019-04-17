@@ -13,8 +13,12 @@
             android:roundIcon="@mipmap/ic_launcher_round"
             android:supportsRtl="true"
             android:theme="@style/AppTheme">
-        <activity android:name=".MainActivity" android:label="ГИС  Негорельский учебно-опытный лесхоз">
+        <activity android:name=".MainActivity" android:windowSoftInputMode="adjustPan" android:label="ГИС Негорельский лесхоз">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
 
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
         </activity>
         <activity
                 android:name=".mvp.components.layerscreen.view.LayerActivity"
@@ -35,11 +39,6 @@
         <activity
                 android:name=".mvp.components.mapscreen.view.MapActivity"
                 android:label="@string/title_activity_maps">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN"/>
-
-                <category android:name="android.intent.category.LAUNCHER"/>
-            </intent-filter>
         </activity>
     </application>
 

@@ -6,6 +6,8 @@ import androidx.fragment.app.Fragment
 
 abstract class BaseFragment : Fragment(), BaseView {
 
+    lateinit var mContext: Context
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         init(savedInstanceState)
@@ -13,5 +15,5 @@ abstract class BaseFragment : Fragment(), BaseView {
 
     protected abstract fun init(savedInstanceState: Bundle?)
 
-    override fun getContext(): Context = context
+    override fun getContext(): Context = this.activity!!.applicationContext
 }

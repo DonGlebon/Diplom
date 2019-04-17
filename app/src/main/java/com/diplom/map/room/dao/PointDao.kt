@@ -16,6 +16,6 @@ interface PointDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun insert(points: List<Point>): Single<List<Long>>
 
-    @Query("SELECT pid FROM POINT WHERE Lat BETWEEN :s AND :n AND Lng BETWEEN :w AND :e GROUP BY pid")
+    @Query("SELECT SubFeatureID FROM POINTS WHERE Lat BETWEEN :s AND :n AND Lng BETWEEN :w AND :e GROUP BY SubFeatureID")
     fun getPointsInBounds(n: Double, e: Double, s: Double, w: Double): Maybe<List<Long>>
 }

@@ -2,19 +2,11 @@ package com.diplom.map.mvp.components.layerscreen.presenter
 
 import android.os.Environment
 import android.util.Log
-import com.bbn.openmap.dataAccess.shape.ShapeUtils
-import com.bbn.openmap.layer.shape.ESRIPoly
-import com.bbn.openmap.layer.shape.ESRIPolygonRecord
-import com.bbn.openmap.layer.shape.ESRIRecord
-import com.bbn.openmap.layer.shape.ShapeFile
+import com.diplom.map.esri.utils.ShapeFileUtils
 import com.diplom.map.mvp.App
 import com.diplom.map.mvp.abstracts.presenter.BasePresenter
 import com.diplom.map.mvp.components.layerscreen.contract.LayerScreenContract
-import com.diplom.map.mvp.components.layerscreen.model.MultiPolygonData
-import com.diplom.map.mvp.components.layerscreen.model.PolygonData
 import com.diplom.map.room.AppDatabase
-import com.diplom.map.room.entities.Layer
-import com.google.android.gms.maps.model.LatLng
 import io.reactivex.Single
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
@@ -27,7 +19,9 @@ class LayerScreenPresenter : BasePresenter<LayerScreenContract.View>(), LayerScr
 
     @Inject
     lateinit var db: AppDatabase
-    private val disposable = CompositeDisposable()
+
+    @Inject
+    lateinit var disposable: CompositeDisposable
 
     init {
         App.get().injector.inject(this)
@@ -41,7 +35,7 @@ class LayerScreenPresenter : BasePresenter<LayerScreenContract.View>(), LayerScr
         disposable.add(db.layerDao().getLayers()
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
-            .doOnNext { view!!.addLayerToRecycler(it as ArrayList<Layer>) }
+            .doOnNext { view!!.addLayerToRecycler(it) }
             .doOnError { Log.d("Hello", "Get layers error: ${it.message}") }
             .subscribe()
         )
@@ -61,7 +55,7 @@ class LayerScreenPresenter : BasePresenter<LayerScreenContract.View>(), LayerScr
     }
 
     private fun insertLayer(filename: String, filepath: String): Boolean {
-        db.globalDao().insertShapeFileData(filename, filepath, readShapeFile(filename, filepath))
+        db.globalDao().insertShapeFileData(filename, filepath, ShapeFileUtils.readShapeFile(filename, filepath))
         return true
     }
 
@@ -75,35 +69,56 @@ class LayerScreenPresenter : BasePresenter<LayerScreenContract.View>(), LayerScr
             .subscribe())
     }
 
-    private fun readShapeFile(name: String, path: String): ArrayList<MultiPolygonData> {
-        val multiPolygons = ArrayList<MultiPolygonData>()
-        try {
-            val shapeFile = ShapeFile(File("${path + name}.shp"))
-            var record: ESRIRecord? = shapeFile.nextRecord
-            val s = ShapeUtils.getStringForType(record!!.shapeType)
-            while (record != null) {
-                if (ShapeUtils.getStringForType(record.shapeType) == "POLYLINE" || ShapeUtils.getStringForType(record.shapeType) == "POLYGON") {
-                    val multiPolygonRecord = record as ESRIPolygonRecord
-                    val multiPolygon =
-                        MultiPolygonData()
-                    for (i in multiPolygonRecord.polygons.indices) {
-                        val polygonRecord = multiPolygonRecord.polygons[i] as ESRIPoly.ESRIFloatPoly
-                        val polygon =
-                            PolygonData()
-                        for (j in 0 until polygonRecord.nPoints) {
-                            polygon.addPoint(LatLng(polygonRecord.getY(j), polygonRecord.getX(j)))
-                        }
-                        multiPolygon.addPolygon(polygon)
-                    }
-                    multiPolygons.add(multiPolygon)
-                }
-                record = shapeFile.nextRecord
-            }
-        } catch (e: Exception) {
-            Log.d("Hello", "read err ${e.message}")
-        }
-        return multiPolygons
-    }
+//    private fun readShapeFile(name: String, mPath: String): ESRILayer {
+//        val featureList = ArrayList<ESRIFeature>()
+//        var type = ""
+//        try {
+//            val shapeFile = ShapeFile(File("${mPath + name}.shp"))
+//            var record: ESRIRecord? = shapeFile.nextRecord
+//            type = ShapeUtils.getStringForType(record!!.shapeType)
+//            while (record != null) {
+//                featureList.add(
+//                    when (ShapeUtils.getStringForType(record.shapeType)) {
+//                        "POLYGON", "POLYLINE" -> {
+//                            parseMultiPolygon(record as ESRIPolygonRecord)
+//                        }
+//                        "POINT" -> {
+//                            parsePoint(record as ESRIPointRecord)
+//                        }
+//                        else -> {
+//                            ESRIFeature()
+//                        }
+//                    }
+//                )
+//                record = shapeFile.nextRecord
+//            }
+//        } catch (e: Exception) {
+//            Log.d("Hello", "read err ${e.message}")
+//        }
+//        return ESRILayer(type, featureList)
+//    }
+//
+//    private fun parseMultiPolygon(record: ESRIPolygonRecord): ESRIFeature {
+//        val feature = ESRIFeature()
+//        for (i in record.polygons.indices) {
+//            val polygonRecord = record.polygons[i] as ESRIPoly.ESRIFloatPoly
+//            val polygon =
+//                ESRISubFeature()
+//            for (j in 0 until polygonRecord.nPoints) {
+//                polygon.addPoint(LatLng(polygonRecord.getY(j), polygonRecord.getX(j)))
+//            }
+//            feature.addFeature(polygon)
+//        }
+//        return feature
+//    }
+//
+//    private fun parsePoint(record: ESRIPointRecord): ESRIFeature {
+//        val future = ESRIFeature()
+//        future.addFeature(
+//            ESRISubFeature().also { it.addPoint(LatLng(record.x, record.y)) }
+//        )
+//        return future
+//    }
 
 }
 

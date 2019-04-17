@@ -7,11 +7,17 @@ import android.view.ViewGroup
 import com.diplom.map.R
 import com.diplom.map.mvp.App
 import com.diplom.map.mvp.abstracts.view.BaseFragment
+import com.diplom.map.mvp.components.fragments.map.contract.MapFragmentContract
 import com.diplom.map.mvp.components.fragments.map.presenter.MapFragmentPresenter
-import com.google.android.gms.maps.*
+import com.diplom.map.esri.model.ESRITileProvider
+import com.google.android.gms.maps.GoogleMap
+import com.google.android.gms.maps.MapView
+import com.google.android.gms.maps.MapsInitializer
+import com.google.android.gms.maps.OnMapReadyCallback
+import com.google.android.gms.maps.model.TileOverlayOptions
 import javax.inject.Inject
 
-class MapFragment : BaseFragment(), OnMapReadyCallback {
+class MapFragment : BaseFragment(), MapFragmentContract.View, OnMapReadyCallback {
 
     private lateinit var mMapView: MapView
     private lateinit var mMap: GoogleMap
@@ -28,6 +34,7 @@ class MapFragment : BaseFragment(), OnMapReadyCallback {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
+        presenter.attach(this)
         val rootView = inflater.inflate(R.layout.fragment_page_map, container, false)
         prepareMap(rootView, savedInstanceState)
         return rootView
@@ -43,13 +50,16 @@ class MapFragment : BaseFragment(), OnMapReadyCallback {
 
     override fun onMapReady(map: GoogleMap) {
         mMap = map
-        mMap.moveCamera(CameraUpdateFactory.newLatLng(presenter.lastPosition))
-        mMap.setOnCameraIdleListener {
-            presenter.setLastPlace(
-                mMap.projection.visibleRegion.latLngBounds.center,
-                mMap.cameraPosition.zoom
-            )
-        }
+        presenter.mapReady()
+    }
+
+
+    override fun addTileProvider(provider: ESRITileProvider) {
+        mMap.addTileOverlay(
+            TileOverlayOptions()
+                .fadeIn(true)
+                .tileProvider(provider)
+        )
     }
 
 }

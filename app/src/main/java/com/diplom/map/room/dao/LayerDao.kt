@@ -6,9 +6,8 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import com.diplom.map.room.data.LayerData
 import com.diplom.map.room.entities.Layer
-import io.reactivex.Flowable
-import io.reactivex.Maybe
-import io.reactivex.Single
+import com.diplom.map.room.entities.LayerVisibility
+import io.reactivex.*
 
 @Dao
 interface LayerDao {
@@ -19,20 +18,28 @@ interface LayerDao {
     @Insert
     fun insert(layers: List<Layer>): Single<List<Long>>
 
-    @Query("SELECT uid FROM Layer WHERE name = :name")
-    fun findLayerByName(name: String): Maybe<Long>
+    @Query("SELECT uid FROM Layers WHERE filename = :filename")
+    fun findLayerByName(filename: String): Maybe<Long>
 
-
-    @Query("SELECT * FROM Layer WHERE uid = :lid LIMIT 1")
+    @Query("SELECT * FROM Layers WHERE uid = :lid LIMIT 1")
     fun getLayerById(lid: Long): Single<Layer>
 
-    @Query("SELECT * FROM layer")
-    fun getDataLayers(): Flowable<List<LayerData>>
+    @Query("SELECT * FROM layers")
+    fun getDataLayers(): Observable<List<LayerData>>
 
-    @Query("SELECT * FROM layer")
-    fun getLayers(): Flowable<List<Layer>>
+    @Query("SELECT * FROM Layers")
+    fun getLayers(): Flowable<List<LayerVisibility>>
 
-    @Query("SELECT uid FROM Layer WHERE uid = :layerId")
-    fun getLayerData(layerId: Long): Single<LayerData>
+//    @Query("SELECT uid, GeometryType FROM Layers WHERE uid = :layerId")
+//    fun getLayerDataByID(layerId: Long): Single<LayerData>
+
+    @Query("UPDATE Layers SET ZIndex = :zIndex,  minZoom = :minZoom, maxZoom = :maxZoom WHERE uid = :uid")
+    fun updateLayerVisibility(uid: Long, zIndex: Int, minZoom: Int, maxZoom: Int): Completable
+
+    @Query("DELETE FROM Layers WHERE uid = :uid")
+    fun deleteLayer(uid: Long): Completable
+
+
+    // @Query("SELECT Layers.uid, FROM LAYERS")
 
 }

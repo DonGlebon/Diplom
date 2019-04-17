@@ -14,7 +14,7 @@ import com.diplom.map.mvp.abstracts.view.BaseCompatActivity
 import com.diplom.map.mvp.components.layerscreen.contract.LayerScreenContract
 import com.diplom.map.mvp.components.layerscreen.model.LayerRecyclerViewAdapter
 import com.diplom.map.mvp.components.layerscreen.presenter.LayerScreenPresenter
-import com.diplom.map.room.entities.Layer
+import com.diplom.map.room.entities.LayerVisibility
 import kotlinx.android.synthetic.main.activity_layer.*
 import java.io.File
 import javax.inject.Inject
@@ -25,7 +25,7 @@ class LayerActivity : BaseCompatActivity(), LayerScreenContract.View {
     @Inject
     lateinit var presenter: LayerScreenPresenter
 
-    private var layerList = ArrayList<Layer>()
+    private var layerList = ArrayList<LayerVisibility>()
     private val adapter = LayerRecyclerViewAdapter(layerList, this)
 
     override fun init(savedInstanceState: Bundle?) {
@@ -43,7 +43,7 @@ class LayerActivity : BaseCompatActivity(), LayerScreenContract.View {
         presenter.onRecyclerIsReady()
     }
 
-    override fun addLayerToRecycler(layers: ArrayList<Layer>) {
+    override fun addLayerToRecycler(layers: List<LayerVisibility>) {
         layerList.clear()
         layerList.addAll(layers)
         adapter.notifyDataSetChanged()
@@ -76,6 +76,7 @@ class LayerActivity : BaseCompatActivity(), LayerScreenContract.View {
         requestCode: Int, resultCode: Int,
         resultData: Intent?
     ) {
+        super.onActivityResult(requestCode, resultCode, resultData)
         if (requestCode == FILE_MANAGER_REQUEST_CODE && resultCode == Activity.RESULT_OK) {
             val uri: Uri?
             if (resultData != null) {

@@ -14,4 +14,6 @@ class LayerFragmentPresenter : BasePresenter<LayerFragmentContract.View>(), Laye
     init {
         App.get().injector.inject(this)
     }
+
+
 }

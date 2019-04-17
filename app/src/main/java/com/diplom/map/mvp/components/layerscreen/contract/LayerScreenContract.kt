@@ -3,6 +3,7 @@ package com.diplom.map.mvp.components.layerscreen.contract
 import com.diplom.map.mvp.abstracts.presenter.BaseMvpPresenter
 import com.diplom.map.mvp.abstracts.view.BaseView
 import com.diplom.map.room.entities.Layer
+import com.diplom.map.room.entities.LayerVisibility
 import java.io.File
 
 interface LayerScreenContract {
@@ -13,7 +14,7 @@ interface LayerScreenContract {
 
     interface View : BaseView {
         fun displayProgressBar(display: Boolean)
-        fun addLayerToRecycler(layers: ArrayList<Layer>)
+        fun addLayerToRecycler(layers: List<LayerVisibility>)
     }
 
 }

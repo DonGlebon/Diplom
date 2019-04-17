@@ -1,24 +1,24 @@
 package com.diplom.map.room.dao
 
 import androidx.room.*
-import com.diplom.map.room.data.PolygonData
-import com.diplom.map.room.entities.Polygon
+import com.diplom.map.room.data.SubFeatureData
+import com.diplom.map.room.entities.SubFeature
 import io.reactivex.Flowable
 import io.reactivex.Single
 
 @Dao
 interface PolygonDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    fun insert(polygon: Polygon): Single<Long>
+    fun insert(subFeature: SubFeature): Single<Long>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    fun insert(polygons: List<Polygon>): Single<List<Long>>
+    fun insert(subFeatures: List<SubFeature>): Single<List<Long>>
 
-    @Query("SELECT * FROM Polygon WHERE uid in (:uids)")
-    fun getPolygonsById(uids: List<Long>): Flowable<Polygon>
+    @Query("SELECT * FROM SubFeatures WHERE uid in (:subFeatureId)")
+    fun getPolygonsById(subFeatureId: List<Long>): Flowable<SubFeature>
 
     @Transaction
-    @Query("SELECT mpid, uid FROM Polygon WHERE uid IN (:polygonsIDs) ORDER BY uid")
-    fun getPolygonsWithPoints(polygonsIDs: List<Long>): Flowable<List<PolygonData>>
+    @Query("SELECT FeatureID, uid FROM SubFeatures WHERE uid IN (:polygonsIDs) ORDER BY uid")
+    fun getPolygonsWithPoints(polygonsIDs: List<Long>): Flowable<List<SubFeatureData>>
 
 }
