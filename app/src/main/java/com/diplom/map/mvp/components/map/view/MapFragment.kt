@@ -1,15 +1,18 @@
 package com.diplom.map.mvp.components.map.view
 
+import android.Manifest
+import android.content.pm.PackageManager
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.content.ContextCompat
 import com.diplom.map.R
+import com.diplom.map.esri.model.ESRITileProvider
 import com.diplom.map.mvp.App
 import com.diplom.map.mvp.abstracts.view.BaseFragment
 import com.diplom.map.mvp.components.map.contract.MapFragmentContract
 import com.diplom.map.mvp.components.map.presenter.MapFragmentPresenter
-import com.diplom.map.esri.model.ESRITileProvider
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.MapView
 import com.google.android.gms.maps.MapsInitializer
@@ -50,6 +53,10 @@ class MapFragment : BaseFragment(), MapFragmentContract.View, OnMapReadyCallback
 
     override fun onMapReady(map: GoogleMap) {
         mMap = map
+        if (ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION)
+            == PackageManager.PERMISSION_GRANTED
+        )
+            mMap.isMyLocationEnabled = true
         presenter.mapReady()
     }
 
