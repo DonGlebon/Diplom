@@ -9,7 +9,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.diplom.map.R
 import com.diplom.map.mvp.App
 import com.diplom.map.room.AppDatabase
-import com.diplom.map.room.entities.LayerVisibility
+import com.diplom.map.room.data.LayerVisibility
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.schedulers.Schedulers
@@ -75,6 +75,15 @@ class LayerRecyclerViewAdapter(private var itemList: List<LayerVisibility>, priv
                     Log.d("Hello", "Visibility: $isVisible")
                 }
             })
+        view.setOnThemeChangeListener { layer, theme ->
+            disposable.add(
+                db.layerDao().updateActiveTheme(layer, theme)
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .doOnError { Log.d("Hello", "Theme change list err: ${it.message}") }
+                    .subscribe()
+            )
+        }
     }
 }
 

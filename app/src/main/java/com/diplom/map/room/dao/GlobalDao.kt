@@ -1,9 +1,14 @@
 package com.diplom.map.room.dao
 
 import android.graphics.Color
-import androidx.room.*
+import androidx.room.Dao
+import androidx.room.Insert
+import androidx.room.Query
+import androidx.room.Transaction
 import com.diplom.map.esri.model.ESRILayer
 import com.diplom.map.room.entities.*
+import java.util.*
+import kotlin.collections.ArrayList
 
 @Dao
 interface GlobalDao {
@@ -16,10 +21,10 @@ interface GlobalDao {
     fun insertLayerData(layer: Layer): Long
 
     @Insert
-    fun insertMultiPolygon(feature: Feature): Long
+    fun insertFeature(feature: Feature): Long
 
     @Insert
-    fun insertPolygon(subFeature: SubFeature): Long
+    fun insertSubFeature(subFeature: SubFeature): Long
 
     @Insert
     fun insertPoint(points: Point)
@@ -27,37 +32,71 @@ interface GlobalDao {
     @Insert
     fun insertFeatureData(featureData: FeatureData)
 
-    @Query("SELECT value FROM FeaturesData WHERE lower(ColumnName) like(\"%classcode%\") GROUP BY value")
-    fun getClasscodes(): List<String>
+    @Insert
+    fun insertThemeStyle(theme: ThemeStyle): Long
 
-    @Insert(onConflict = OnConflictStrategy.IGNORE)
-    fun addClasscodeStyle(style: FeatureStyle)
+    @Insert
+    fun insertBaseThemeStyleValues(values: ThemeStyleValues): Long
+//
+//    @Insert
+//    fun insertBaseStyle(styles: FeatureStyle)
+
+    @Query("UPDATE Layers SET themeId = :themeId WHERE uid =:layerId")
+    fun setLayerTheme(themeId: Long, layerId: Long)
+
+
+//    fun addLayerThemeValaues()
 
     @Transaction
     fun insertShapeFileData(
         filename: String,
         filepath: String,
-        esriLayer: ESRILayer
+        esriLayer: ESRILayer,
+        useMainBase: Boolean
     ) {
 
         var layerID = getLayerWithNameAndPath(filename, filepath)
         if (layerID == 0L)
             layerID = insertLayerData(Layer(0, filename, filepath, esriLayer.type))
-
+        val values = ArrayList<ArrayList<String>>()
+        for (f in esriLayer.features[0].featuresData)
+            values.add(ArrayList())
+        var featureIds = 0L
         for (feature in esriLayer.features) {
-            val featureID = insertMultiPolygon(Feature(0, layerID, feature.classcode))
+            val mainBaseId = if (useMainBase) featureIds else null
+            val featureID = insertFeature(Feature(0, layerID))
             for (subFeature in feature.features) {
-                val subFeatureID = insertPolygon(SubFeature(0, featureID))
+                val subFeatureID = insertSubFeature(SubFeature(0, featureID))
                 for (point in subFeature.points) {
                     insertPoint(Point(0, subFeatureID, point.latitude, point.longitude))
                 }
             }
-            for (featureData in feature.featuresData) {
-                insertFeatureData(FeatureData(0, featureID, featureData.columnName, featureData.value))
+            for (i in 0 until feature.featuresData.size) {
+                insertFeatureData(
+                    FeatureData(
+                        0,
+                        filename,
+                        featureID,
+                        feature.featuresData[i].columnName,
+                        feature.featuresData[i].value,
+                        mainBaseId
+                    )
+                )
+                values[i].add(feature.featuresData[i].value)
             }
+            featureIds++
         }
-        val classcodes = getClasscodes()
-        for (classcode in classcodes)
-            addClasscodeStyle(FeatureStyle(0, classcode, Color.argb(180,20,20,250), Color.GREEN, 1f))
+        val random = Random()
+        val colorFill = Color.rgb(random.nextInt(255), random.nextInt(255), random.nextInt(255))
+        val colorStroke = Color.rgb(random.nextInt(255), random.nextInt(255), random.nextInt(255))
+        for (i in 0 until esriLayer.features[0].featuresData.size) {
+            val column = esriLayer.features[0].featuresData[i].columnName
+            val theme = insertThemeStyle(ThemeStyle(0, layerID, column))
+            for (value in values[i].distinctBy {
+                it.toLowerCase()
+            })
+                insertBaseThemeStyleValues(ThemeStyleValues(0, theme, value, colorFill, colorStroke, 1f))
+        }
+
     }
 }

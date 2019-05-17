@@ -18,8 +18,7 @@ data class Feature(
     @PrimaryKey(autoGenerate = true)
     val uid: Long,
     @ColumnInfo(name = "LayerID")
-    val lid: Long,
-    val classcode: String
+    val lid: Long
 )
 
 

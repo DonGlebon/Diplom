@@ -14,9 +14,9 @@ import com.diplom.map.R
 import com.diplom.map.mvp.App
 import com.diplom.map.mvp.abstracts.view.BaseFragment
 import com.diplom.map.mvp.components.layervisibility.contract.LayerVisibilityFragmentContract
-import com.diplom.map.mvp.components.layervisibility.presenter.LayerVisibilityFragmentPresenter
 import com.diplom.map.mvp.components.layervisibility.model.LayerRecyclerViewAdapter
-import com.diplom.map.room.entities.LayerVisibility
+import com.diplom.map.mvp.components.layervisibility.presenter.LayerVisibilityFragmentPresenter
+import com.diplom.map.room.data.LayerVisibility
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import java.io.File
 import javax.inject.Inject
@@ -100,7 +100,7 @@ class LayerVisibilityFragment : BaseFragment(), LayerVisibilityFragmentContract.
             if (resultData != null) {
                 uri = resultData.data
                 val path = uri.path
-                presenter.addNewLayer(File(path))
+                presenter.addNewLayer(File(path), this.activity!!)
             }
         }
     }
@@ -109,4 +109,8 @@ class LayerVisibilityFragment : BaseFragment(), LayerVisibilityFragmentContract.
         private const val FILE_MANAGER_REQUEST_CODE = 20
     }
 
+    override fun onDestroy() {
+        super.onDestroy()
+        presenter.detach()
+    }
 }

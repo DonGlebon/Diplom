@@ -1,7 +1,9 @@
 package com.diplom.map.mvp.components.layervisibility.presenter
 
+import android.content.Context
 import android.os.Environment
 import android.util.Log
+import androidx.appcompat.app.AlertDialog
 import com.diplom.map.esri.utils.ShapeFileUtils
 import com.diplom.map.mvp.App
 import com.diplom.map.mvp.abstracts.presenter.BasePresenter
@@ -14,13 +16,14 @@ import io.reactivex.schedulers.Schedulers
 import java.io.File
 import javax.inject.Inject
 
+
 class LayerVisibilityFragmentPresenter : BasePresenter<LayerVisibilityFragmentContract.View>(),
     LayerVisibilityFragmentContract.Presenter {
 
     @Inject
     lateinit var db: AppDatabase
 
-    val disposable = CompositeDisposable()
+    private val disposable = CompositeDisposable()
 
     init {
         App.get().injector.inject(this)
@@ -40,26 +43,49 @@ class LayerVisibilityFragmentPresenter : BasePresenter<LayerVisibilityFragmentCo
         )
     }
 
-    override fun addNewLayer(file: File) {
-        view!!.displayProgressBar(true)
-        val path = file.absoluteFile.absolutePath
-        val filename = path.substring(path.lastIndexOf('/') + 1).substringBefore('.')
-        val uriPath = path.substringBefore(':')
-        val pp = path.substring(path.lastIndexOf(':') + 1, path.lastIndexOf('/'))
-        val filepath = if (uriPath.toLowerCase().contains("primary"))
-            "/storage/emulated/0/$pp/"
-        else
-            "${Environment.getExternalStorageDirectory()}/"
-        addLayer(filename, filepath)
+    override fun addNewLayer(file: File, activity: Context, norm: Boolean) {
+        var filename = ""
+        var filepath = ""
+        if (!norm) {
+            val path = file.absoluteFile.absolutePath
+            filename = path.substring(path.lastIndexOf('/') + 1).substringBefore('.')
+            val uriPath = path.substringBefore(':')
+            val pp = path.substring(path.lastIndexOf(':') + 1, path.lastIndexOf('/'))
+            filepath = if (uriPath.toLowerCase().contains("primary"))
+                "/storage/emulated/0/$pp/"
+            else
+                "${Environment.getExternalStorageDirectory()}/"
+        } else {
+            filepath = file.path.substring(0, file.path.lastIndexOf("/")) + java.io.File.separator
+            filename = file.name.substring(0,file.name.lastIndexOf("."))
+        }
+
+        var useMainBase = false
+        AlertDialog.Builder(activity)
+            .setMultiChoiceItems(
+                arrayOf("Связать с слой с MainBase"), null
+            ) { _, _, isChecked ->
+                useMainBase = isChecked
+            }
+            .setNegativeButton("Не добавлять") { _, _ -> }
+            .setPositiveButton("Добавить") { _, _ ->
+                view!!.displayProgressBar(true)
+                addLayer(filename, filepath, useMainBase)
+
+            }
+            .setTitle("Добавить новый слой?")
+            .create()
+            .show()
     }
 
-    private fun insertLayer(filename: String, filepath: String): Boolean {
-        db.globalDao().insertShapeFileData(filename, filepath, ShapeFileUtils.readShapeFile(filename, filepath))
+    private fun insertLayer(filename: String, filepath: String, useMainBase: Boolean): Boolean {
+        db.globalDao()
+            .insertShapeFileData(filename, filepath, ShapeFileUtils.readShapeFile(filename, filepath), useMainBase)
         return true
     }
 
-    private fun addLayer(filename: String, filepath: String) {
-        disposable.add(Single.defer { Single.just(insertLayer(filename, filepath)) }
+    private fun addLayer(filename: String, filepath: String, useMainBase: Boolean) {
+        disposable.add(Single.defer { Single.just(insertLayer(filename, filepath, useMainBase)) }
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .doOnSubscribe { view!!.displayProgressBar(true) }

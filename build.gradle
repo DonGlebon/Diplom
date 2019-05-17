@@ -19,9 +19,11 @@ buildscript {
 allprojects {
     repositories {
         google()
-        maven { url 'http://download.osgeo.org/webdav/geotools/' }
+        maven {
+           // url 'http://download.osgeo.org/webdav/geotools/',
+            url 'https://jitpack.io'
+        }
         jcenter()
-
     }
 }
 

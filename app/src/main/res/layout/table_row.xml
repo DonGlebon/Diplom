@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:orientation="vertical"
+              android:layout_width="@dimen/default_row_header_width"
+              android:layout_height="@dimen/table_view_cell_height"
+>
+    <TextView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" android:id="@+id/Edit" android:textAlignment="center"
+            android:textSize="18sp" android:fontFamily="@font/roboto"
+            android:layout_gravity="center" android:textStyle="bold" android:text="asdad"/>
+</LinearLayout>

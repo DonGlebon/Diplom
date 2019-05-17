@@ -1,6 +1,7 @@
 package com.diplom.map.room.data
 
 import androidx.room.Relation
+import com.diplom.map.room.entities.MainBase
 import com.diplom.map.room.entities.Point
 
 data class SubFeatureData(

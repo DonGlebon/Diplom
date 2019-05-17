@@ -39,4 +39,8 @@ class LayerFragment : BaseFragment(), LayerFragmentContract.View {
         view.tabLayout.setupWithViewPager(view.layerPager)
     }
 
+    override fun onDestroy() {
+        super.onDestroy()
+        presenter.detach()
+    }
 }

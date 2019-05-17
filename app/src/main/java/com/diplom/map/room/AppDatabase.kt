@@ -12,11 +12,13 @@ import com.diplom.map.room.entities.*
 @Database(
     entities = [Layer::class,
         SubFeature::class,
+        MainBase::class,
         Feature::class,
+        ThemeStyle::class,
+        ThemeStyleValues::class,
         Point::class,
-        FeatureData::class,
-        FeatureStyle::class],
-    version = 23,
+        FeatureData::class],
+    version = 5122,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {

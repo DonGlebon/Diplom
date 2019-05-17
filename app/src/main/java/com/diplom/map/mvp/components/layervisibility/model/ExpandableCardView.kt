@@ -2,6 +2,7 @@ package com.diplom.map.mvp.components.layervisibility.model
 
 import android.content.Context
 import android.util.AttributeSet
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.View.OnClickListener
@@ -9,10 +10,12 @@ import android.view.ViewGroup.LayoutParams.MATCH_PARENT
 import android.view.animation.Animation
 import android.view.animation.RotateAnimation
 import android.view.animation.Transformation
+import android.widget.AdapterView
+import android.widget.ArrayAdapter
 import android.widget.LinearLayout
 import androidx.appcompat.app.AlertDialog
 import com.diplom.map.R
-import com.diplom.map.room.entities.LayerVisibility
+import com.diplom.map.room.data.LayerVisibility
 import kotlinx.android.synthetic.main.cardview_body.view.*
 import kotlinx.android.synthetic.main.expandable_cardview.view.*
 
@@ -35,11 +38,28 @@ class ExpandableCardView @JvmOverloads constructor(
     }
 
     private fun displayValues() {
-        card_title.text = values!!.filename.capitalize().replace('_',' ')
+        card_title.text = values!!.filename.capitalize().replace('_', ' ')
         visibilitySwitcher.isChecked = values?.isVisible!!
         ZIndexLayer.editText?.setText(values?.ZIndex.toString())
         maxZoomLayer.editText?.setText(values?.maxZoom.toString())
         minZoomLayer.editText?.setText(values?.minZoom.toString())
+        val colums = HashMap<Long, String>()
+        for (style in values!!.style)
+            colums[style.uid] = style.columnName
+        val adapterData = ArrayList<String>()
+        for (v in colums.values)
+            adapterData.add(v)
+        var active = ""
+        for (i in 0 until values?.style?.size!!)
+            if (values?.themeId!! == values!!.style[i].uid) {
+                active = values!!.style[i].columnName
+                break
+            }
+        val adapter = ArrayAdapter<String>(context, android.R.layout.simple_spinner_item, adapterData)
+        adapter.setDropDownViewResource(R.layout.support_simple_spinner_dropdown_item)
+        spinnerLayerStyle.adapter = adapter
+        // Log.d("Hello", "Active: $activeId")
+        spinnerLayerStyle.setSelection(adapterData.indexOf(active))
     }
 
     private fun isValuesWasChanged(): Boolean {
@@ -171,6 +191,7 @@ class ExpandableCardView @JvmOverloads constructor(
 
     private var saveListener: OnLayerStateWasChangedListener? = null
     private var changeVisibilityListener: OnVisibilityChangedListener? = null
+    private var themeListener: onThemeChangeListener? = null
 
     private val expandClickListener = OnClickListener {
         if (!isMoving) {
@@ -234,12 +255,42 @@ class ExpandableCardView @JvmOverloads constructor(
                         visibilitySwitcher.isChecked,
                         ZIndexLayer.editText?.text.toString().toInt(),
                         minZoomLayer.editText?.text.toString().toInt(),
-                        maxZoomLayer.editText?.text.toString().toInt()
+                        maxZoomLayer.editText?.text.toString().toInt(),
+                        values?.style!!,
+                        values?.themeId!!
                     )
                 )
         }
 
+        spinnerLayerStyle.onItemSelectedListener =
+            object : AdapterView.OnItemSelectedListener {
+                override fun onNothingSelected(parent: AdapterView<*>?) {
+                    Log.d("Hello", "Active:nothing")
+                }
+
+                override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+                    var activeStyle = ""
+                    for (i in 0 until values?.style?.size!!)
+                        if (values?.themeId!! == values!!.style[i].uid) {
+                            activeStyle = values!!.style[i].columnName
+                            break
+                        }
+                    if (values != null && parent!!.adapter.getItem(position) != activeStyle) {
+                        Log.d("Hello", "Sele 2")
+                        val item = (parent?.adapter as ArrayAdapter<*>).getItem(position)
+                        var active = 0L
+                        for (value in values!!.style)
+                            if (value.columnName == item) {
+                                active = value.uid
+                                break
+                            }
+                        themeListener?.onThemeChanged(values?.uid!!, active)
+                    }
+                }
+
+            }
     }
+
 
     interface OnVisibilityChangedListener {
         fun VisibilityChanged(isVisible: Boolean)
@@ -279,6 +330,21 @@ class ExpandableCardView @JvmOverloads constructor(
 
             override fun onDelete(layerVisibility: LayerVisibility) {
                 method(layerVisibility, "Delete")
+            }
+        }
+    }
+
+    interface onThemeChangeListener {
+        fun onThemeChanged(layerId: Long, themeId: Long)
+    }
+
+    fun setOnThemeChangeListener(
+        method: (layer: Long, theme: Long) -> Unit
+    ) {
+        themeListener = object :
+            onThemeChangeListener {
+            override fun onThemeChanged(layerId: Long, themeId: Long) {
+                method(layerId, themeId)
             }
         }
     }

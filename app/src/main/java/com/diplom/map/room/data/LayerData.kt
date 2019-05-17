@@ -2,6 +2,7 @@ package com.diplom.map.room.data
 
 import androidx.room.Relation
 import com.diplom.map.room.entities.Feature
+import com.diplom.map.room.entities.ThemeStyle
 
 data class LayerData(
     var uid: Long,
@@ -11,7 +12,14 @@ data class LayerData(
     var GeometryType: String,
     @Relation(
         parentColumn = "uid", entityColumn = "LayerID",
-        entity = Feature::class, projection = ["uid", "LayerID", "classcode"]
+        entity = Feature::class, projection = ["uid", "LayerID"]
     )
-    var featureList: List<FData>
+    var featureList: List<FData>,
+    @Relation(
+        parentColumn = "uid",
+        entityColumn = "layerId",
+        entity = ThemeStyle::class
+    )
+    var styles: List<ThemeStyleData>,
+    var themeId: Long?
 )

@@ -4,7 +4,7 @@ import java.io.DataInputStream
 import java.io.EOFException
 import java.io.IOException
 import java.io.InputStream
-import java.nio.charset.Charset
+import java.nio.charset.StandardCharsets
 
 internal class DbfStreamReader(stream: InputStream) : DataInputStream(stream) {
 
@@ -14,7 +14,7 @@ internal class DbfStreamReader(stream: InputStream) : DataInputStream(stream) {
     fun readString(length: Int): String {
         val array = ByteArray(length)
         this.readFully(array)
-        val s = String(array, Charset.forName("windows-1251"))
+        val s = String(array, StandardCharsets.UTF_8)
         return s.trim { it <= ' ' }
     }
 

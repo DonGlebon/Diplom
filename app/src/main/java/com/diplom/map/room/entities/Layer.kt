@@ -1,12 +1,22 @@
 package com.diplom.map.room.entities
 
-import androidx.room.ColumnInfo
-import androidx.room.Entity
-import androidx.room.Index
-import androidx.room.PrimaryKey
+import androidx.room.*
+import androidx.room.ForeignKey.CASCADE
 
 
-@Entity(tableName = "Layers", indices = [Index(value = ["uid", "filename"], unique = true)])
+@Entity(
+    tableName = "Layers",
+    indices = [Index(value = ["uid", "filename"], unique = true), Index(value = ["filename"], unique = true)],
+    foreignKeys = [
+        ForeignKey(
+            entity = ThemeStyle::class,
+            parentColumns = ["uid"],
+            childColumns = ["themeId"],
+            onDelete = CASCADE,
+            onUpdate = CASCADE
+        )
+    ]
+)
 data class Layer(
     @PrimaryKey(autoGenerate = true)
     val uid: Long,
@@ -17,14 +27,7 @@ data class Layer(
     val isVisible: Boolean = true,
     val ZIndex: Int = 0,
     val minZoom: Int = 2,
-    val maxZoom: Int = 23
+    val maxZoom: Int = 23,
+    val themeId: Long? = null
 )
 
-data class LayerVisibility(
-    val uid: Long,
-    val filename: String,
-    val isVisible: Boolean,
-    val ZIndex: Int,
-    val minZoom: Int,
-    val maxZoom: Int
-)
