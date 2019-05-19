@@ -44,13 +44,13 @@ class MapFragmentPresenter : BasePresenter<MapFragmentContract.View>(), MapFragm
                     provider
                 }
                 .observeOn(AndroidSchedulers.mainThread())
-                .doOnNext {
+                .doOnSuccess {
                     Log.d("Hello", "MapReady1 next:")
                     if (it != null)
                         view?.addTileProvider(it)
                 }
                 .doOnError { Log.d("Hello", "MapReady1 error: ${it.message}") }
-                .doOnComplete { }
+                //.doOnComplete { }
                 .subscribe()
         )
     }

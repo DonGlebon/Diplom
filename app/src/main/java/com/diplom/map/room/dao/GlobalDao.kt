@@ -37,15 +37,9 @@ interface GlobalDao {
 
     @Insert
     fun insertBaseThemeStyleValues(values: ThemeStyleValues): Long
-//
-//    @Insert
-//    fun insertBaseStyle(styles: FeatureStyle)
 
     @Query("UPDATE Layers SET themeId = :themeId WHERE uid =:layerId")
     fun setLayerTheme(themeId: Long, layerId: Long)
-
-
-//    fun addLayerThemeValaues()
 
     @Transaction
     fun insertShapeFileData(

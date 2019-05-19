@@ -3,6 +3,7 @@ package com.diplom.map.room.entities
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.ForeignKey.CASCADE
+import androidx.room.Index
 import androidx.room.PrimaryKey
 
 @Entity(
@@ -14,7 +15,8 @@ import androidx.room.PrimaryKey
             onDelete = CASCADE,
             onUpdate = CASCADE
         )
-    ]
+    ],
+    indices = [Index("layerId")]
 )
 data class ThemeStyle(
     @PrimaryKey(autoGenerate = true)

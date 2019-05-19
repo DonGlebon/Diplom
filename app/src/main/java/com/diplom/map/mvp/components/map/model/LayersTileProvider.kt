@@ -65,7 +65,7 @@ class LayersTileProvider : ESRITileProvider() {
             var empty = ThemeStyleValuesData(0, "solid", 0, Color.GRAY, Color.BLACK, 1f)
             val style = if (activeStyle != null) {
                 for (value in activeStyle.values)
-                    if (value.value == feature.data.find { it.ColumnName == activeStyle.columnName }?.value)
+                    if (value.value.toLowerCase() == feature.data.find { it.ColumnName.toLowerCase() == activeStyle.columnName.toLowerCase() }?.value!!.toLowerCase())
                         empty = value
                 empty
 

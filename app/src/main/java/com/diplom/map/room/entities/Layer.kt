@@ -6,7 +6,10 @@ import androidx.room.ForeignKey.CASCADE
 
 @Entity(
     tableName = "Layers",
-    indices = [Index(value = ["uid", "filename"], unique = true), Index(value = ["filename"], unique = true)],
+    indices = [Index(value = ["uid", "filename"], unique = true), Index(
+        value = ["filename"],
+        unique = true
+    ), Index("themeId")],
     foreignKeys = [
         ForeignKey(
             entity = ThemeStyle::class,

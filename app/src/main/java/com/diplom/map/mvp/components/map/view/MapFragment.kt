@@ -35,6 +35,7 @@ class MapFragment : BaseFragment(), MapFragmentContract.View, OnMapReadyCallback
     private var mMap: GoogleMap? = null
     private var marker: Marker? = null
     private var polygonList = ArrayList<Polygon>()
+    private var userPath: Polyline? = null
 
     @Inject
     lateinit var presenter: MapFragmentPresenter
@@ -66,15 +67,62 @@ class MapFragment : BaseFragment(), MapFragmentContract.View, OnMapReadyCallback
     }
 
     override fun onMapReady(map: GoogleMap) {
-        locationProvider.getLocation()
         mMap = map
+        loadMarkers()
+        locationProvider.setOnLocationChangeListener {
+            userPath?.remove()
+            userPath = mMap?.addPolyline(
+                PolylineOptions().addAll(it.map { location ->
+                    LatLng(
+                        location.latitude,
+                        location.longitude
+                    )
+                })
+                    .color(Color.RED)
+                    .visible(true)
+                    .width(10f)
+            )
+        }
+        userPath = mMap?.addPolyline(PolylineOptions())
+        addMarkerButton.setOnClickListener {
+            locationProvider.getLocation()?.addOnSuccessListener {
+                val view = LayoutInflater.from(this.activity!!).inflate(R.layout.dialog_add_marker, null, false)
+                AlertDialog.Builder(this.activity!!)
+                    .setTitle("Добавить новый маркер")
+                    .setView(view)
+                    .setNegativeButton("Отменить") { _, _ -> }
+                    .setPositiveButton("Добавить") { _, _ ->
+                        val title = view.findViewById<EditText>(R.id.addMarkerTitle).text.toString()
+                        val snippet = view.findViewById<EditText>(R.id.addTitleSnippet).text.toString()
+                        val lat = it.latitude
+                        val lng = it.longitude
+                        presenter.db.layerDao().addMarker(
+                            com.diplom.map.room.entities
+                                .Marker(0, title, snippet, lat, lng)
+                        )
+                            .subscribeOn(Schedulers.io())
+                            .observeOn(AndroidSchedulers.mainThread())
+                            .doOnSuccess {
+                                mMap?.addMarker(
+                                    MarkerOptions()
+                                        .title(title)
+                                        .snippet(snippet)
+                                        .position(LatLng(lat, lng))
+                                )?.tag = "Marker:$it"
+                            }
+                            .subscribe()
+
+                    }
+                    .create()
+                    .show()
+            }
+        }
         if (ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION)
             == PackageManager.PERMISSION_GRANTED
         )
             mMap?.isMyLocationEnabled = true
         presenter.mapReady()
-
-        imageButtonShow?.setOnClickListener {
+        getBoundsButton?.setOnClickListener {
             mMap?.animateCamera(
                 CameraUpdateFactory.newLatLngBounds(
                     LatLngBounds(
@@ -87,6 +135,23 @@ class MapFragment : BaseFragment(), MapFragmentContract.View, OnMapReadyCallback
         }
     }
 
+    private fun loadMarkers() {
+        presenter.db.layerDao().getAllMarkers()
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .doOnSuccess {
+                for (marker in it)
+                    mMap?.addMarker(
+                        MarkerOptions()
+                            .title(marker.title)
+                            .snippet(marker.snippet)
+                            .position(LatLng(marker.lat, marker.lng))
+                    )?.tag = "Marker:${marker.uid}"
+            }
+            .doOnError { }
+            .subscribe()
+    }
+
 
     var tileOverlay: TileOverlay? = null
     override fun addTileProvider(provider: ESRITileProvider) {
@@ -97,22 +162,71 @@ class MapFragment : BaseFragment(), MapFragmentContract.View, OnMapReadyCallback
                 .tileProvider(provider)
         )
         mMap?.setInfoWindowAdapter(MyInfoWindowAdapter(this.context))
-        mMap?.setOnInfoWindowClickListener {
-            val id = it.title.toLong()
-            presenter.getLayerDataById(id)
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .map { fdData ->
-                    val map = HashMap<String, String>()
-                    for (data in fdData)
-                        map[data.ColumnName] = data.value
-                    map
-                }
-                .doOnSuccess {
-                    createDialog(it)
-                }
-                .doOnError { }
-                .subscribe()
+        mMap?.setOnInfoWindowClickListener { marker ->
+            if (marker.tag.toString().contains("Marker:")) {
+                val id = marker.tag.toString().split(':')[1].toLong()
+                presenter.db.layerDao().getMarker(id)
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .doOnSuccess {
+                        val view = LayoutInflater.from(this.activity!!).inflate(R.layout.dialog_add_marker, null, false)
+                        val titleView = view.findViewById<EditText>(R.id.addMarkerTitle)
+                        val snippetView = view.findViewById<EditText>(R.id.addTitleSnippet)
+                        titleView.setText(it.title)
+                        snippetView.setText(it.snippet)
+                        AlertDialog.Builder(this.activity!!)
+                            .setTitle("Добавить новый маркер")
+                            .setView(view)
+                            .setNegativeButton("Удалить") { _, _ ->
+                                presenter.db.layerDao().deleteMarker(it)
+                                    .subscribeOn(Schedulers.io())
+                                    .observeOn(AndroidSchedulers.mainThread())
+                                    .doOnSuccess { marker.remove() }
+                                    .doOnError { }
+                                    .subscribe()
+
+                            }
+                            .setPositiveButton("Обновить") { _, _ ->
+                                val newMarker = it
+                                newMarker.title = view.findViewById<EditText>(R.id.addMarkerTitle).text.toString()
+                                newMarker.snippet = view.findViewById<EditText>(R.id.addTitleSnippet).text.toString()
+                                presenter.db.layerDao().updateMarker(newMarker)
+                                    .subscribeOn(Schedulers.io())
+                                    .observeOn(AndroidSchedulers.mainThread())
+                                    .doOnSuccess {
+                                        marker.remove()
+                                        mMap?.addMarker(
+                                            MarkerOptions()
+                                                .title(newMarker.title)
+                                                .snippet(newMarker.snippet)
+                                                .position(LatLng(newMarker.lat, newMarker.lng))
+                                        )?.tag = "Marker:$it"
+                                    }
+                                    .subscribe()
+
+                            }
+                            .create()
+                            .show()
+                    }
+                    .doOnError { }
+                    .subscribe()
+            } else {
+                val id = marker.title.toLong()
+                presenter.getLayerDataById(id)
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .map { fdData ->
+                        val map = HashMap<String, String>()
+                        for (data in fdData)
+                            map[data.ColumnName] = data.value
+                        map
+                    }
+                    .doOnSuccess {
+                        createDialog(it)
+                    }
+                    .doOnError { }
+                    .subscribe()
+            }
 
         }
         mMap?.setOnMapClickListener {
@@ -152,7 +266,7 @@ class MapFragment : BaseFragment(), MapFragmentContract.View, OnMapReadyCallback
                             var value = row.value
                             if (!value.isEmpty()) {
                                 if (value.length > 10)
-                                    value = value.substring(0..6)
+                                    value = value.substring(0..10)
                                 snippet += "${row.ColumnName}: $value\n"
                             }
                         }

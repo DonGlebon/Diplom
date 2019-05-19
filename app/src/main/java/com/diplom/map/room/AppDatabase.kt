@@ -16,9 +16,10 @@ import com.diplom.map.room.entities.*
         Feature::class,
         ThemeStyle::class,
         ThemeStyleValues::class,
+        Marker::class,
         Point::class,
         FeatureData::class],
-    version = 5122,
+    version = 5123,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {

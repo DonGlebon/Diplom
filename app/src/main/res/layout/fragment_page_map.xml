@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
                                                    xmlns:app="http://schemas.android.com/apk/res-auto"
-                                                   xmlns:tools="http://schemas.android.com/tools"
                                                    android:layout_width="match_parent"
                                                    android:layout_height="match_parent">
 
@@ -13,9 +12,16 @@
             app:layout_constraintTop_toTopOf="parent"/>
     <ImageView
             android:layout_width="38dp"
-            app:srcCompat="@drawable/ic_map_black" android:id="@+id/imageButtonShow"
+            app:srcCompat="@drawable/ic_fullscreen" android:id="@+id/getBoundsButton"
             app:layout_constraintEnd_toEndOf="parent" android:layout_marginEnd="12dp" android:layout_marginTop="64dp"
-            app:layout_constraintTop_toTopOf="parent" android:background="#A0FFFFFF" android:adjustViewBounds="false"
+            app:layout_constraintTop_toTopOf="parent" android:background="#AAFFFFFF" android:adjustViewBounds="false"
+            android:cropToPadding="false" android:layout_height="38dp" android:elevation="3dp"
+            android:backgroundTintMode="screen"/>
+    <ImageView
+            android:layout_width="38dp"
+            app:srcCompat="@drawable/ic_add_location" android:id="@+id/addMarkerButton"
+            app:layout_constraintEnd_toEndOf="parent" android:layout_marginEnd="12dp" android:layout_marginTop="120dp"
+            app:layout_constraintTop_toTopOf="parent" android:background="#AAFFFFFF" android:adjustViewBounds="false"
             android:cropToPadding="false" android:layout_height="38dp" android:elevation="3dp"
     />
 </androidx.constraintlayout.widget.ConstraintLayout>

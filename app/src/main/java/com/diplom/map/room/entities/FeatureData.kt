@@ -17,7 +17,7 @@ import androidx.room.ForeignKey.CASCADE
             parentColumns = ["numberObject"], childColumns = ["mainBaseId"],
             entity = MainBase::class
         )],
-    indices = [Index("FeatureID")]
+    indices = [Index("FeatureID"), Index("layername"), Index("mainBaseId")]
 )
 data class FeatureData(
     @PrimaryKey(autoGenerate = true)

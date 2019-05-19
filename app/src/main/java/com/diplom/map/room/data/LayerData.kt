@@ -10,6 +10,7 @@ data class LayerData(
     val minZoom: Int,
     val maxZoom: Int,
     var GeometryType: String,
+    var themeId: Long?,
     @Relation(
         parentColumn = "uid", entityColumn = "LayerID",
         entity = Feature::class, projection = ["uid", "LayerID"]
@@ -20,6 +21,5 @@ data class LayerData(
         entityColumn = "layerId",
         entity = ThemeStyle::class
     )
-    var styles: List<ThemeStyleData>,
-    var themeId: Long?
+    var styles: List<ThemeStyleData>
 )
