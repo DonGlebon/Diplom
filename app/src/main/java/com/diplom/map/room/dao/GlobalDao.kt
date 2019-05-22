@@ -5,7 +5,7 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.Query
 import androidx.room.Transaction
-import com.diplom.map.esri.model.ESRILayer
+import com.diplom.map.utils.model.ESRILayer
 import com.diplom.map.room.entities.*
 import java.util.*
 import kotlin.collections.ArrayList
@@ -45,8 +45,7 @@ interface GlobalDao {
     fun insertShapeFileData(
         filename: String,
         filepath: String,
-        esriLayer: ESRILayer,
-        useMainBase: Boolean
+        esriLayer: ESRILayer
     ) {
 
         var layerID = getLayerWithNameAndPath(filename, filepath)
@@ -57,7 +56,6 @@ interface GlobalDao {
             values.add(ArrayList())
         var featureIds = 0L
         for (feature in esriLayer.features) {
-            val mainBaseId = if (useMainBase) featureIds else null
             val featureID = insertFeature(Feature(0, layerID))
             for (subFeature in feature.features) {
                 val subFeatureID = insertSubFeature(SubFeature(0, featureID))
@@ -72,8 +70,7 @@ interface GlobalDao {
                         filename,
                         featureID,
                         feature.featuresData[i].columnName,
-                        feature.featuresData[i].value,
-                        mainBaseId
+                        feature.featuresData[i].value
                     )
                 )
                 values[i].add(feature.featuresData[i].value)

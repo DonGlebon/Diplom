@@ -4,7 +4,7 @@ import android.content.Context
 import android.os.Environment
 import android.util.Log
 import androidx.appcompat.app.AlertDialog
-import com.diplom.map.esri.utils.ShapeFileUtils
+import com.diplom.map.utils.ShapeFileUtils
 import com.diplom.map.mvp.App
 import com.diplom.map.mvp.abstracts.presenter.BasePresenter
 import com.diplom.map.mvp.components.layervisibility.contract.LayerVisibilityFragmentContract
@@ -60,32 +60,25 @@ class LayerVisibilityFragmentPresenter : BasePresenter<LayerVisibilityFragmentCo
             filename = file.name.substring(0,file.name.lastIndexOf("."))
         }
 
-        var useMainBase = false
         AlertDialog.Builder(activity)
-            .setMultiChoiceItems(
-                arrayOf("Связать с слой с MainBase"), null
-            ) { _, _, isChecked ->
-                useMainBase = isChecked
-            }
             .setNegativeButton("Не добавлять") { _, _ -> }
             .setPositiveButton("Добавить") { _, _ ->
                 view!!.displayProgressBar(true)
-                addLayer(filename, filepath, useMainBase)
-
+                addLayer(filename, filepath)
             }
             .setTitle("Добавить новый слой?")
             .create()
             .show()
     }
 
-    private fun insertLayer(filename: String, filepath: String, useMainBase: Boolean): Boolean {
+    private fun insertLayer(filename: String, filepath: String): Boolean {
         db.globalDao()
-            .insertShapeFileData(filename, filepath, ShapeFileUtils.readShapeFile(filename, filepath), useMainBase)
+            .insertShapeFileData(filename, filepath, ShapeFileUtils.readShapeFile(filename, filepath))
         return true
     }
 
-    private fun addLayer(filename: String, filepath: String, useMainBase: Boolean) {
-        disposable.add(Single.defer { Single.just(insertLayer(filename, filepath, useMainBase)) }
+    private fun addLayer(filename: String, filepath: String) {
+        disposable.add(Single.defer { Single.just(insertLayer(filename, filepath)) }
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .doOnSubscribe { view!!.displayProgressBar(true) }

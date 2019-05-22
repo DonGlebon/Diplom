@@ -1,7 +1,7 @@
 package com.diplom.map.mvp.components.map.model
 
 import android.graphics.*
-import com.diplom.map.esri.model.ESRITileProvider
+import com.diplom.map.utils.model.ESRITileProvider
 import com.diplom.map.room.data.LayerData
 import com.diplom.map.room.data.ThemeStyleValuesData
 import com.google.android.gms.maps.GoogleMap

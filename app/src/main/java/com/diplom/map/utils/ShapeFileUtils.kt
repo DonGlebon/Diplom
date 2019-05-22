@@ -1,12 +1,12 @@
-package com.diplom.map.esri.utils
+package com.diplom.map.utils
 
 import android.util.Log
 import com.bbn.openmap.dataAccess.shape.ShapeUtils
 import com.bbn.openmap.layer.shape.*
-import com.diplom.map.esri.model.ESRIFeature
-import com.diplom.map.esri.model.ESRIFeatureData
-import com.diplom.map.esri.model.ESRILayer
-import com.diplom.map.esri.model.ESRISubFeature
+import com.diplom.map.utils.model.ESRIFeature
+import com.diplom.map.utils.model.ESRIFeatureData
+import com.diplom.map.utils.model.ESRILayer
+import com.diplom.map.utils.model.ESRISubFeature
 import com.google.android.gms.maps.model.LatLng
 import com.linuxense.javadbf.DBFException
 import com.linuxense.javadbf.DBFReader
@@ -47,9 +47,9 @@ class ShapeFileUtils {
                         for (i in rowObjects.indices) {
                             if (rowObjects[i] != null) {
                                 val value = rowObjects[i].toString()
-                                if (value.length < 250)
-                                    array.add(rowObjects[i].toString())
-                                else
+                                if (value.length < 250) {
+                                    array.add(rowObjects[i].toString().trim('0', '.'))
+                                } else
                                     array.add("")
                             } else
                                 array.add("")
@@ -80,10 +80,18 @@ class ShapeFileUtils {
                 while (record != null) {
                     val feature = when (ShapeUtils.getStringForType(record.shapeType)) {
                         "POLYGON", "POLYLINE" -> {
-                            parseMultiPolygon(record as ESRIPolygonRecord, crsShp, crsApp)
+                            parseMultiPolygon(
+                                record as ESRIPolygonRecord,
+                                crsShp,
+                                crsApp
+                            )
                         }
                         "POINT" -> {
-                            parsePoint(record as ESRIPointRecord, crsShp, crsApp)
+                            parsePoint(
+                                record as ESRIPointRecord,
+                                crsShp,
+                                crsApp
+                            )
                         }
                         else -> {
                             ESRIFeature()

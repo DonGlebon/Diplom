@@ -1,4 +1,4 @@
-package com.diplom.map.esri.model;
+package com.diplom.map.utils.model;
 
 import java.io.BufferedInputStream;
 import java.io.IOException;

@@ -3,7 +3,7 @@
     <item
             android:id="@+id/getLayers"
             android:enabled="true"
-            android:icon="@drawable/ic_layers_white_48dp"
+            android:icon="@drawable/ic_cloud_download"
             android:title="Слои"
             app:showAsAction="ifRoom"/>
 </menu>

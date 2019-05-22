@@ -2,13 +2,12 @@ package com.diplom.map.mvp
 
 import android.app.Application
 import com.diplom.map.location.LocationProviderModule
-import com.diplom.map.mvp.components.data.backstage.DataFragmentModule
 import com.diplom.map.mvp.components.layer.backstage.LayerFragmentModule
 import com.diplom.map.mvp.components.layervisibility.backstage.LayerVisibilityFragmentModule
 import com.diplom.map.mvp.components.map.backstage.MapFragmentModule
 import com.diplom.map.mvp.config.di.AppDiComponent
 import com.diplom.map.mvp.config.di.DaggerAppDiComponent
-import com.diplom.map.mvp.config.retrofit.GeoserverClientModule
+import com.diplom.map.mvp.config.retrofit.backstage.GeoserverClientModule
 import com.diplom.map.room.backstage.AppDatabaseModule
 import io.reactivex.disposables.CompositeDisposable
 import javax.inject.Inject
@@ -27,7 +26,6 @@ class App : Application() {
             .layerVisibilityFragmentModule(LayerVisibilityFragmentModule())
             .mapFragmentModule(MapFragmentModule())
             .layerFragmentModule(LayerFragmentModule())
-            .dataFragmentModule(DataFragmentModule())
             .geoserverClientModule(GeoserverClientModule())
             .locationProviderModule(LocationProviderModule(this))
             .appDatabaseModule(AppDatabaseModule(this))

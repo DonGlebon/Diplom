@@ -37,7 +37,6 @@ class MapFragmentPresenter : BasePresenter<MapFragmentContract.View>(), MapFragm
             db.layerDao().getDataLayers()
                 .subscribeOn(Schedulers.io())
                 .map {
-                    Log.d("Hello", "MapReady1 maap:")
                     val provider = LayersTileProvider()
                     for (layer in it)
                         provider.addLayer(layer)
@@ -45,12 +44,10 @@ class MapFragmentPresenter : BasePresenter<MapFragmentContract.View>(), MapFragm
                 }
                 .observeOn(AndroidSchedulers.mainThread())
                 .doOnSuccess {
-                    Log.d("Hello", "MapReady1 next:")
                     if (it != null)
                         view?.addTileProvider(it)
                 }
                 .doOnError { Log.d("Hello", "MapReady1 error: ${it.message}") }
-                //.doOnComplete { }
                 .subscribe()
         )
     }

@@ -19,17 +19,11 @@ import com.diplom.map.mvp.components.layer.view.LayerFragment
 import com.diplom.map.mvp.components.layervisibility.presenter.LayerVisibilityFragmentPresenter
 import com.diplom.map.mvp.components.map.view.MapFragment
 import com.diplom.map.mvp.config.retrofit.GeoserverClient
-import com.google.android.gms.location.FusedLocationProviderClient
-import com.google.android.gms.location.LocationRequest
-import com.google.android.gms.location.LocationServices
-import com.google.android.gms.location.LocationSettingsRequest
+import com.diplom.map.utils.FileUtils
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
 import kotlinx.android.synthetic.main.activity_main.*
-import net.lingala.zip4j.core.ZipFile
-import net.lingala.zip4j.exception.ZipException
-import okhttp3.ResponseBody
-import java.io.*
+import java.io.File
 import java.io.File.separator
 import javax.inject.Inject
 
@@ -82,8 +76,7 @@ class MainActivity : AppCompatActivity() {
         val active: Fragment = when (bottomNavigationView.selectedItemId) {
             R.id.action_map -> MapFragment()
             R.id.action_layer -> LayerFragment()
-            //R.id.action_data -> LayerFragment()
-            else -> LayerFragment()
+            else -> MapFragment()
         }
         supportFragmentManager
             .beginTransaction()
@@ -99,7 +92,6 @@ class MainActivity : AppCompatActivity() {
                 R.id.action_layer -> {
                     transaction.replace(R.id.fragmentContainer, LayerFragment());server?.isVisible = true
                 }
-                //R.id.action_data -> transaction.replace(R.id.fragmentContainer, DataFragment())
                 else -> transaction.replace(R.id.fragmentContainer, MapFragment())
             }
             transaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE)
@@ -112,115 +104,68 @@ class MainActivity : AppCompatActivity() {
         menuInflater.inflate(R.menu.app_bar_main_menu, menu)
         server = menu?.findItem(R.id.getLayers)
         server?.isVisible = false
-        toolbar?.setOnClickListener {
-            Log.d("Hello", "Click")
-            geoserverClient.getApi()
-                .getLayerNames("http://nuolh.belstu.by:4201/geoserver/rest/workspaces/myws/featuretypes.json")
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .map {
-                    val list = ArrayList<String>()
-                    for (layer in it.featureTypes?.featureType!!)
-                        list.add(layer.name)
-                    list
-                }
-                .doOnSuccess {
-
-                    AlertDialog.Builder(this)
-                        .setTitle("Слой")
-                        .setSingleChoiceItems(it.toTypedArray(), 0, null)
-                        .setNegativeButton("Отменить") { _, _ -> }
-                        .setPositiveButton("Добавить") { dialog, _ ->
-                            val selectedPosition = (dialog as AlertDialog).listView.checkedItemPosition
-                            // Toast.makeText(this,,Toast.LENGTH_SHORT).show()
-                            val shapeName = it[selectedPosition].toLowerCase()
-                            val shapeFileUrl =
-                                "http://nuolh.belstu.by:4201/geoserver/cite/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=cite%3A$shapeName&maxFeatures=5000000&outputFormat=SHAPE-ZIP&srsName=EPSG:4326&format_options=CHARSET%3AUTF-8"
-                            Log.d("Hello", "path: $shapeFileUrl")
-                            geoserverClient.getApi().getShapeFile(shapeFileUrl)
-                                .subscribeOn(Schedulers.io())
-                                .observeOn(AndroidSchedulers.mainThread())
-                                .doOnSuccess { body ->
-                                    val zip = writeResponseBodyToDisk(shapeName, body)
-                                    val directory = zip?.path?.substring(0, zip.path!!.lastIndexOf("."))
-                                    if (zip != null) {
-                                        unzip(zip, File(directory))
-                                        val dir =
-                                            getExternalFilesDir(null)?.path + separator + shapeName + separator + shapeName + ".shp"
-                                        layerPresenter.addNewLayer(File(dir), this, true)
-
-                                    } else
-                                        Toast.makeText(
-                                            this,
-                                            "Не удалось скачать файл с сервера",
-                                            Toast.LENGTH_LONG
-                                        ).show()
-                                }
-                                .doOnError {
-                                    Log.d("Hello", "Error: ${it.message}")
-                                }
-
-                                .subscribe()
-                        }
-                        .create()
-                        .show()
-                }
-                .doOnError { Log.d("Hello", "Error: ${it.message}") }
-                .subscribe()
+        server?.setOnMenuItemClickListener {
+            getLayerNamesFromServer()
+            return@setOnMenuItemClickListener true
         }
+
         return true
     }
 
 
-    private fun writeResponseBodyToDisk(filename: String, body: ResponseBody): File? {
-        try {
-            val futureStudioIconFile = File(getExternalFilesDir(null)?.path + separator + "$filename.zip")
-            var inputStream: InputStream? = null
-            var outputStream: OutputStream? = null
-            try {
-                val fileReader = ByteArray(4096)
-                val fileSize = body.contentLength()
-                var fileSizeDownloaded: Long = 0
-
-                inputStream = body.byteStream()
-                outputStream = FileOutputStream(futureStudioIconFile)
-
-                while (true) {
-                    val read = inputStream!!.read(fileReader)
-
-                    if (read == -1) {
-                        break
-                    }
-
-                    outputStream.write(fileReader, 0, read)
-
-                    fileSizeDownloaded += read.toLong()
-                }
-                outputStream.flush()
-
-                return futureStudioIconFile
-            } catch (e: IOException) {
-                return null
-            } finally {
-                inputStream?.close()
-                outputStream?.close()
+    fun getLayerNamesFromServer() {
+        geoserverClient.getApi()
+            .getLayerNames()
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .map {
+                val list = ArrayList<String>()
+                for (layer in it.featureTypes?.featureType!!)
+                    list.add(layer.name)
+                list
             }
-        } catch (e: IOException) {
-            return null
-        }
-
+            .doOnSuccess {
+                AlertDialog.Builder(this)
+                    .setTitle("Слой")
+                    .setSingleChoiceItems(it.toTypedArray(), 0, null)
+                    .setNegativeButton("Отменить") { _, _ -> }
+                    .setPositiveButton("Добавить") { dialog, _ ->
+                        val selectedPosition = (dialog as AlertDialog).listView.checkedItemPosition
+                        val shapeName = it[selectedPosition].toLowerCase()
+                        downloadShapefileFromServer(shapeName)
+                    }
+                    .create()
+                    .show()
+            }
+            .doOnError { Log.d("Hello", "Error: ${it.message}") }
+            .subscribe()
     }
 
-    @Throws(IOException::class)
-    fun unzip(archive: File, targetDirectory: File) {
-        val source = archive.path
-        val destination = targetDirectory.path
-        try {
-            val zipFile = ZipFile(source)
-            zipFile.extractAll(destination)
-        } catch (e: ZipException) {
-            e.printStackTrace()
-        }
+    fun downloadShapefileFromServer(shapefileName: String) {
+        geoserverClient.getApi().getShapeFile("cite%3A$shapefileName")
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .doOnSuccess { body ->
+                val zip = FileUtils.writeResponseBodyToDisk(shapefileName, body, this)
+                val directory = zip?.path?.substring(0, zip.path!!.lastIndexOf("."))
+                if (zip != null) {
+                    FileUtils.unzip(zip, File(directory))
+                    val dir =
+                        getExternalFilesDir(null)?.path + "$separator$shapefileName$separator$shapefileName.shp"
+                    layerPresenter.addNewLayer(File(dir), this, true)
+
+                } else
+                    Toast.makeText(
+                        this,
+                        "Не удалось скачать файл с сервера",
+                        Toast.LENGTH_LONG
+                    ).show()
+            }
+            .doOnError {
+                Log.d("Hello", "Error: ${it.message}")
+            }
+
+            .subscribe()
     }
 
 }

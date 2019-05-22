@@ -1,4 +1,4 @@
-package com.diplom.map.esri.model
+package com.diplom.map.utils.model
 
 data class ESRIFeatureData(
     val columnName: String,

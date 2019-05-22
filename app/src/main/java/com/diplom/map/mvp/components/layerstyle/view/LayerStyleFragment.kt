@@ -37,12 +37,12 @@ class LayerStyleFragment : BaseFragment(), LayerStyleFragmentContract.View {
         savedInstanceState: Bundle?
     ): View? {
         val rootView = inflater.inflate(R.layout.fragment_page_layers_styles, container, false)
-        setupUI(rootView)
+        setupThemeSpinner(rootView)
         return rootView
     }
 
 
-    private fun setupUI(root: View) {
+    private fun setupThemeSpinner(root: View) {
         val spinnerLayer = root.findViewById<Spinner>(R.id.spinnerLayer)
         val spinnerColumn = root.findViewById<Spinner>(R.id.spinnerColumn)
         val recyclerView = root.findViewById<RecyclerView>(R.id.recyclerStyle)
@@ -50,13 +50,12 @@ class LayerStyleFragment : BaseFragment(), LayerStyleFragmentContract.View {
             .observeOn(AndroidSchedulers.mainThread())
             .doOnSuccess {
                 if (it.isNotEmpty()) {
-                    val adapter =
-                        ArrayAdapter<String>(this.context, android.R.layout.simple_spinner_item, it)
-                            .also { adapter ->
-                                adapter.setDropDownViewResource(R.layout.support_simple_spinner_dropdown_item)
-                                spinnerLayer.adapter = adapter
-                                setColumnSpinner(recyclerView, spinnerColumn, it[0])
-                            }
+                    ArrayAdapter<String>(this.context, android.R.layout.simple_spinner_item, it)
+                        .also { adapter ->
+                            adapter.setDropDownViewResource(R.layout.support_simple_spinner_dropdown_item)
+                            spinnerLayer.adapter = adapter
+                            setColumnSpinner(recyclerView, spinnerColumn, it[0])
+                        }
                     spinnerLayer.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
                         override fun onNothingSelected(parent: AdapterView<*>?) {
 
@@ -65,7 +64,6 @@ class LayerStyleFragment : BaseFragment(), LayerStyleFragmentContract.View {
                         override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
                             setColumnSpinner(recyclerView, spinnerColumn, it[position])
                         }
-
                     }
                 }
             }
@@ -74,14 +72,13 @@ class LayerStyleFragment : BaseFragment(), LayerStyleFragmentContract.View {
         )
     }
 
-
     fun setColumnSpinner(recycler: RecyclerView, spinner: Spinner, layername: String) {
         presenter.disposable.add(presenter.getColumnNames(layername)
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .doOnSuccess {
                 if (it.isNotEmpty()) {
-                    val adapter = ArrayAdapter<String>(this.context, android.R.layout.simple_spinner_item, it)
+                    ArrayAdapter<String>(this.context, android.R.layout.simple_spinner_item, it)
                         .also { adapter ->
                             adapter.setDropDownViewResource(R.layout.support_simple_spinner_dropdown_item)
                             spinner.adapter = adapter

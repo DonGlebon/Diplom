@@ -12,12 +12,8 @@ import androidx.room.ForeignKey.CASCADE
         ForeignKey(
             parentColumns = ["filename"], childColumns = ["layername"],
             entity = Layer::class, onUpdate = CASCADE, onDelete = CASCADE
-        ),
-        ForeignKey(
-            parentColumns = ["numberObject"], childColumns = ["mainBaseId"],
-            entity = MainBase::class
         )],
-    indices = [Index("FeatureID"), Index("layername"), Index("mainBaseId")]
+    indices = [Index("FeatureID"), Index("layername")]
 )
 data class FeatureData(
     @PrimaryKey(autoGenerate = true)
@@ -27,6 +23,5 @@ data class FeatureData(
     var fid: Long,
     @ColumnInfo(name = "ColumnName")
     var name: String,
-    var value: String,
-    var mainBaseId: Long?
+    var value: String
 )
