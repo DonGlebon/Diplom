@@ -208,7 +208,7 @@ class ExpandableCardView @JvmOverloads constructor(
         expandButton.setOnClickListener(expandClickListener)
 
         visibilitySwitcher.setOnCheckedChangeListener { _, isChecked ->
-            changeVisibilityListener?.VisibilityChanged(isChecked)
+            changeVisibilityListener?.VisibilityChanged(isChecked,values!!.uid)
         }
 
         removeLayerButton.setOnClickListener {
@@ -293,18 +293,18 @@ class ExpandableCardView @JvmOverloads constructor(
 
 
     interface OnVisibilityChangedListener {
-        fun VisibilityChanged(isVisible: Boolean)
+        fun VisibilityChanged(isVisible: Boolean, id: Long)
     }
 
     fun setOnVisibilityChangedListener(listener: OnVisibilityChangedListener) {
         changeVisibilityListener = listener
     }
 
-    fun setOnVisibilityChangedListener(method: (isVisible: Boolean) -> Unit) {
+    fun setOnVisibilityChangedListener(method: (isVisible: Boolean, uid: Long) -> Unit) {
         changeVisibilityListener = object :
             OnVisibilityChangedListener {
-            override fun VisibilityChanged(isVisible: Boolean) {
-                method(isVisible)
+            override fun VisibilityChanged(isVisible: Boolean, id: Long) {
+                method(isVisible,id)
             }
         }
     }

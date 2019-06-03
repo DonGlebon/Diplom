@@ -1,9 +1,10 @@
 package com.diplom.map.mvp.components.map.model
 
 import android.graphics.*
-import com.diplom.map.utils.model.ESRITileProvider
 import com.diplom.map.room.data.LayerData
-import com.diplom.map.room.data.ThemeStyleValuesData
+import com.diplom.map.room.data.provider.LayerProvider
+import com.diplom.map.room.data.provider.ThemeStyleValuesProviderData
+import com.diplom.map.utils.model.ESRITileProvider
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.Tile
@@ -55,48 +56,38 @@ class LayersTileProvider : ESRITileProvider() {
 
 
     override fun addLayer(layerData: LayerData) {
-        addNewLayer(layerData)
     }
 
-    private fun addNewLayer(layerData: LayerData) {
-        val activeStyle = layerData.styles.find { it.uid == layerData.themeId }
-        for (i in 0 until layerData.featureList.size) {
-            val feature = layerData.featureList[i]
-            var empty = ThemeStyleValuesData(0, "solid", 0, Color.GRAY, Color.BLACK, 1f)
-            val style = if (activeStyle != null) {
-                for (value in activeStyle.values)
-                    if (value.value.toLowerCase() == feature.data.find { it.ColumnName.toLowerCase() == activeStyle.columnName.toLowerCase() }?.value!!.toLowerCase())
-                        empty = value
-                empty
-
-            } else
-                empty
-            val stylePath = FeatureStylePath(layerData.GeometryType, style).apply {
+    fun addLayer(layer: LayerProvider) {
+        for (feature in layer.features) {
+            val stylePath = FeatureStylePath(layer.layerData.GeometryType, feature.style).apply {
                 uid = feature.uid
-                zIndex = layerData.ZIndex
-                maxZoom = layerData.maxZoom
-                minZoom = layerData.minZoom
+                zIndex = layer.layerData.ZIndex
+                maxZoom = layer.layerData.maxZoom
+                minZoom = layer.layerData.minZoom
             }
-            for (subFeature in feature.subFeatures) {
+            for (points in feature.pointList) {
                 val path = Path()
-                val pointList = subFeature.points.sortedBy { it.uid }
                 val localPoints = ArrayList<Point>()
-                val startPoint = mProjection.toPoint(LatLng(pointList[0].Lat, pointList[0].Lng))
+                val startPoint = mProjection.toPoint(LatLng(points[0].Lat, points[0].Lng))
                 path.moveTo(startPoint.x.toFloat(), startPoint.y.toFloat())
-                for (i in 1 until pointList.size) {
-                    val localPoint = mProjection.toPoint(LatLng(pointList[i].Lat, pointList[i].Lng))
+                for (i in 1 until points.size) {
+                    val localPoint = mProjection.toPoint(LatLng(points[i].Lat, points[i].Lng))
                     localPoints.add(localPoint)
                     path.lineTo(localPoint.x.toFloat(), localPoint.y.toFloat())
                 }
-                if (layerData.GeometryType == "POLYGON")
+                if (layer.layerData.GeometryType == "POLYGON")
                     path.close()
                 stylePath.addPath(path)
                 stylePath.pointList.add(localPoints)
             }
             stylePath.generateBounds()
             mPath.add(stylePath)
+
         }
+
     }
+
 
     override fun getPolygonByClick(map: GoogleMap, position: LatLng, zoom: Float): Long {
         val localPoint = mProjection.toPoint(position)
@@ -159,7 +150,7 @@ class LayersTileProvider : ESRITileProvider() {
         return inside
     }
 
-    class FeatureStylePath(val type: String, style: ThemeStyleValuesData) {
+    class FeatureStylePath(val type: String, style: ThemeStyleValuesProviderData) {
 
         var uid = -1L
         var zIndex = 0

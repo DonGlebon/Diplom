@@ -3,6 +3,7 @@ package com.diplom.map.mvp.components.layervisibility.presenter
 import android.content.Context
 import android.os.Environment
 import android.util.Log
+import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import com.diplom.map.utils.ShapeFileUtils
 import com.diplom.map.mvp.App
@@ -48,6 +49,11 @@ class LayerVisibilityFragmentPresenter : BasePresenter<LayerVisibilityFragmentCo
         var filepath = ""
         if (!norm) {
             val path = file.absoluteFile.absolutePath
+            if(path.substring(path.lastIndexOf("."),path.length) != ".shp")
+            {
+                Toast.makeText(this.view!!.getContext(),"Неверный формат файла", Toast.LENGTH_LONG).show()
+                return
+            }
             filename = path.substring(path.lastIndexOf('/') + 1).substringBefore('.')
             val uriPath = path.substringBefore(':')
             val pp = path.substring(path.lastIndexOf(':') + 1, path.lastIndexOf('/'))

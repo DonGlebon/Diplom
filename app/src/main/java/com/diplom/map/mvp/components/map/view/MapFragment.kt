@@ -10,6 +10,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.EditText
 import android.widget.LinearLayout
+import android.widget.ScrollView
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
@@ -23,8 +24,8 @@ import com.diplom.map.mvp.components.map.presenter.MapFragmentPresenter
 import com.diplom.map.utils.model.ESRITileProvider
 import com.google.android.gms.maps.*
 import com.google.android.gms.maps.model.*
-import io.reactivex.Single
 import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.schedulers.Schedulers
 import kotlinx.android.synthetic.main.fragment_page_map.*
 import kotlinx.android.synthetic.main.marker_layout.view.*
@@ -37,12 +38,16 @@ class MapFragment : BaseFragment(), MapFragmentContract.View, OnMapReadyCallback
     private var marker: Marker? = null
     private var polygonList = ArrayList<Polygon>()
     private var userPath: Polyline? = null
+    private var userPoints = ArrayList<Circle>()
+    private var userAreas = ArrayList<Circle>()
 
     @Inject
     lateinit var presenter: MapFragmentPresenter
 
     @Inject
     lateinit var locationProvider: LocationProvider
+
+    private val disposable = CompositeDisposable()
 
     override fun init(savedInstanceState: Bundle?) {
         App.get().injector.inject(this)
@@ -67,14 +72,46 @@ class MapFragment : BaseFragment(), MapFragmentContract.View, OnMapReadyCallback
         mMapView.getMapAsync(this)
     }
 
+//    override fun onResume() {
+//        super.onResume()
+//        val it =LatLngBounds(
+//            LatLng(53.4958349064697316, 26.8924356412861592),
+//            LatLng(53.6616809839191902, 27.3830005533529253)
+//        )
+//        mMap?.moveCamera(CameraUpdateFactory.newLatLngBounds(it, 1))
+//    }
+
     override fun onMapReady(map: GoogleMap) {
         mMap = map
+        mMap?.setOnMapLoadedCallback {
+            val it = LatLngBounds(
+                LatLng(53.4958349064697316, 26.8924356412861592),
+                LatLng(53.6616809839191902, 27.3830005533529253)
+            )
+            mMap?.animateCamera(CameraUpdateFactory.newLatLngBounds(it, 1))
+        }
+        Log.d("Hello", "1")
         setupMap()
+        Log.d("Hello", "2")
         loadMarkers()
+        Log.d("Hello", "3")
         addListeners()
+        Log.d("Hello", "4")
+//        Single.just(
+//            LatLngBounds(
+//                LatLng(53.4958349064697316, 26.8924356412861592),
+//                LatLng(53.6616809839191902, 27.3830005533529253)
+//            )
+//        ).subscribeOn(Schedulers.io())
+//            .observeOn(AndroidSchedulers.mainThread())
+//            .doOnSuccess {
+//                Log.d("Hello", "5")
+//            }
+//            .subscribe()
     }
 
     private fun setupMap() {
+        mMap?.setInfoWindowAdapter(MyInfoWindowAdapter(this.context))
         userPath = mMap?.addPolyline(PolylineOptions())
         if (ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION)
             == PackageManager.PERMISSION_GRANTED
@@ -82,33 +119,52 @@ class MapFragment : BaseFragment(), MapFragmentContract.View, OnMapReadyCallback
             mMap?.isMyLocationEnabled = true
         presenter.mapReady()
 
-        Single.just(
-            LatLngBounds(
-                LatLng(53.4958349064697316, 26.8924356412861592),
-                LatLng(53.6616809839191902, 27.3830005533529253)
-            )
-        ).subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-            .doOnSuccess {
-                mMap?.moveCamera(CameraUpdateFactory.newLatLngBounds(it, 1))
-            }
-            .subscribe()
     }
 
     private fun addListeners() {
-        locationProvider.setOnLocationChangeListener {
+        locationProvider.setOnLocationChangeListener { locations ->
             userPath?.remove()
             userPath = mMap?.addPolyline(
-                PolylineOptions().addAll(it.map { location ->
+                PolylineOptions().addAll(locations.map { location ->
                     LatLng(location.latitude, location.longitude)
                 })
                     .color(Color.RED)
                     .visible(true)
                     .width(10f)
+                    .zIndex(0f)
             )
+            userAreas.forEach { it.remove() }
+            userPoints.forEach { it.remove() }
+            userAreas.clear()
+            userPoints.clear()
+            if (mMap != null)
+                for (location in locations) {
+                    userAreas.add(
+                        mMap!!.addCircle(
+                            CircleOptions()
+                                .center(LatLng(location.latitude, location.longitude))
+                                .radius(location.accuracy.toDouble())
+                                .fillColor(Color.argb(60, 20, 40, 250))
+                                .strokeColor(Color.argb(120, 20, 40, 250))
+                                .strokeWidth(3f)
+                                .zIndex(1f)
+                        )
+                    )
+                    userPoints.add(
+                        mMap!!.addCircle(
+                            CircleOptions()
+                                .center(LatLng(location.latitude, location.longitude))
+                                .radius(2.0)
+                                .fillColor(Color.argb(160, 20, 250, 100))
+                                .strokeColor(Color.argb(255, 255, 250, 255))
+                                .strokeWidth(1f)
+                                .zIndex(2f)
+                        )
+                    )
+                }
         }
 
-        addMarkerButton.setOnClickListener {
+        addMarkerButton?.setOnClickListener {
             addMarker()
         }
 
@@ -127,7 +183,7 @@ class MapFragment : BaseFragment(), MapFragmentContract.View, OnMapReadyCallback
         mMap?.setOnInfoWindowClickListener { marker ->
             if (marker.tag.toString().contains("Marker:")) {
                 val id = marker.tag.toString().split(':')[1].toLong()
-                presenter.db.layerDao().getMarker(id)
+                disposable.add(presenter.db.layerDao().getMarker(id)
                     .subscribeOn(Schedulers.io())
                     .observeOn(AndroidSchedulers.mainThread())
                     .doOnSuccess {
@@ -137,23 +193,24 @@ class MapFragment : BaseFragment(), MapFragmentContract.View, OnMapReadyCallback
                         titleView.setText(it.title)
                         snippetView.setText(it.snippet)
                         AlertDialog.Builder(this.activity!!)
-                            .setTitle("Добавить новый маркер")
+                            .setTitle("Изменить заметку")
                             .setView(view)
-                            .setNegativeButton("Удалить") { _, _ -> deleteMarker(it,marker) }
+                            .setNegativeButton("Удалить") { _, _ -> deleteMarker(it, marker) }
                             .setPositiveButton("Обновить") { _, _ ->
                                 val newMarker = it
                                 newMarker.title = view.findViewById<EditText>(R.id.addMarkerTitle).text.toString()
                                 newMarker.snippet = view.findViewById<EditText>(R.id.addTitleSnippet).text.toString()
-                                updateMarker(newMarker)
+                                updateMarker(newMarker, marker)
                             }
                             .create()
                             .show()
                     }
                     .doOnError { }
                     .subscribe()
+                )
             } else {
                 val id = marker.title.toLong()
-                presenter.getLayerDataById(id)
+                disposable.add(presenter.getLayerDataById(id)
                     .subscribeOn(Schedulers.io())
                     .observeOn(AndroidSchedulers.mainThread())
                     .map { fdData ->
@@ -163,46 +220,51 @@ class MapFragment : BaseFragment(), MapFragmentContract.View, OnMapReadyCallback
                         map
                     }
                     .doOnSuccess {
-                        createDialog(it)
+                        createDialog(id, it)
                     }
                     .doOnError { }
                     .subscribe()
+                )
             }
 
         }
     }
 
-    private fun deleteMarker(m: com.diplom.map.room.entities.Marker,marker: Marker) {
-        presenter.db.layerDao().deleteMarker(m)
+    private fun deleteMarker(m: com.diplom.map.room.entities.Marker, marker: Marker) {
+        disposable.add(presenter.db.layerDao().deleteMarker(m)
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .doOnSuccess { marker.remove() }
             .doOnError { }
             .subscribe()
+        )
     }
 
-    private fun updateMarker(newMarker: com.diplom.map.room.entities.Marker) {
-        presenter.db.layerDao().updateMarker(newMarker)
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-            .doOnSuccess {
-                marker?.remove()
-                mMap?.addMarker(
-                    MarkerOptions()
-                        .title(newMarker.title)
-                        .snippet(newMarker.snippet)
-                        .position(LatLng(newMarker.lat, newMarker.lng))
-                )?.tag = "Marker:${newMarker.uid}"
-            }
-            .subscribe()
+    private fun updateMarker(newMarker: com.diplom.map.room.entities.Marker, oldMarker: Marker) {
+        disposable.add(
+            presenter.db.layerDao().updateMarker(newMarker)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .doOnSuccess {
+                    oldMarker.remove()
+                    mMap?.addMarker(
+                        MarkerOptions()
+                            .title(newMarker.title)
+                            .snippet("${newMarker.snippet}\nLat: ${newMarker.lat}\nLng: ${newMarker.lng}")
+                            .position(LatLng(newMarker.lat, newMarker.lng))
+                    )?.tag = "Marker:${newMarker.uid}"
+                }
+                .subscribe()
+        )
     }
 
     private fun addMarker() {
         locationProvider.getLocation()?.addOnSuccessListener {
             val view = LayoutInflater.from(this.activity!!).inflate(R.layout.dialog_add_marker, null, false)
             AlertDialog.Builder(this.activity!!)
-                .setTitle("Добавить новый маркер")
+                .setTitle("Добавить новую заметку")
                 .setView(view)
+                .setCancelable(false)
                 .setNegativeButton("Отменить") { _, _ -> }
                 .setPositiveButton("Добавить") { _, _ ->
                     val title = view.findViewById<EditText>(R.id.addMarkerTitle).text.toString()
@@ -217,7 +279,7 @@ class MapFragment : BaseFragment(), MapFragmentContract.View, OnMapReadyCallback
     }
 
     private fun saveMarker(title: String, snippet: String, lat: Double, lng: Double) {
-        presenter.db.layerDao().addMarker(
+        disposable.add(presenter.db.layerDao().addMarker(
             com.diplom.map.room.entities
                 .Marker(0, title, snippet, lat, lng)
         )
@@ -227,15 +289,16 @@ class MapFragment : BaseFragment(), MapFragmentContract.View, OnMapReadyCallback
                 mMap?.addMarker(
                     MarkerOptions()
                         .title(title)
-                        .snippet(snippet)
+                        .snippet("$snippet\nLat: $lat\nLng: $lng")
                         .position(LatLng(lat, lng))
                 )?.tag = "Marker:$it"
             }
             .subscribe()
+        )
     }
 
     private fun loadMarkers() {
-        presenter.db.layerDao().getAllMarkers()
+        disposable.add(presenter.db.layerDao().getAllMarkers()
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .doOnSuccess {
@@ -243,12 +306,13 @@ class MapFragment : BaseFragment(), MapFragmentContract.View, OnMapReadyCallback
                     mMap?.addMarker(
                         MarkerOptions()
                             .title(marker.title)
-                            .snippet(marker.snippet)
+                            .snippet(marker.snippet + "\nLat: ${marker.lat}\nLng: ${marker.lng}")
                             .position(LatLng(marker.lat, marker.lng))
                     )?.tag = "Marker:${marker.uid}"
             }
             .doOnError { }
             .subscribe()
+        )
     }
 
 
@@ -260,13 +324,13 @@ class MapFragment : BaseFragment(), MapFragmentContract.View, OnMapReadyCallback
                 .fadeIn(true)
                 .tileProvider(provider)
         )
-        mMap?.setInfoWindowAdapter(MyInfoWindowAdapter(this.context))
         mMap?.setOnMapClickListener {
             val uid = provider.getPolygonByClick(mMap!!, it, mMap!!.cameraPosition.zoom)
+            Log.d("Hello", "polygon Click: $uid")
             if (uid != -1L) {
                 polygonList.forEach { polygon -> polygon.remove() }
                 polygonList.clear()
-                presenter.getFeatureById(uid)
+                disposable.add(presenter.getFeatureById(uid)
                     .subscribeOn(Schedulers.io())
                     .observeOn(AndroidSchedulers.mainThread())
                     .doOnSuccess { subFeatures ->
@@ -287,7 +351,8 @@ class MapFragment : BaseFragment(), MapFragmentContract.View, OnMapReadyCallback
                     }
                     .doOnError { }
                     .subscribe()
-                presenter.getLayerDataById(uid)
+                )
+                disposable.add(presenter.getLayerDataById(uid)
                     .subscribeOn(Schedulers.io())
                     .observeOn(AndroidSchedulers.mainThread())
                     .doOnSuccess { data ->
@@ -302,7 +367,7 @@ class MapFragment : BaseFragment(), MapFragmentContract.View, OnMapReadyCallback
                         }
                         mMap?.animateCamera(CameraUpdateFactory.newLatLng(it))
                         marker?.remove()
-                        marker = mMap!!.addMarker(
+                        marker = mMap?.addMarker(
                             MarkerOptions()
                                 .title("$uid")
                                 .snippet(snippet)
@@ -313,11 +378,12 @@ class MapFragment : BaseFragment(), MapFragmentContract.View, OnMapReadyCallback
                     }
                     .doOnError { error -> Log.d("Hello", "Marker err: ${error.message}") }
                     .subscribe()
+                )
             }
         }
     }
 
-    private fun createDialog(map: HashMap<String, String>) {
+    private fun createDialog(id: Long, map: HashMap<String, String>) {
         val view =
             LayoutInflater.from(this.context).inflate(R.layout.marker_layout, null, false)
         for (key in map.keys) {
@@ -326,7 +392,7 @@ class MapFragment : BaseFragment(), MapFragmentContract.View, OnMapReadyCallback
             view.markerLayout.addView(
                 layout,
                 LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    LinearLayout.LayoutParams.MATCH_PARENT,
                     LinearLayout.LayoutParams.WRAP_CONTENT
                 )
             )
@@ -335,9 +401,9 @@ class MapFragment : BaseFragment(), MapFragmentContract.View, OnMapReadyCallback
             layout.addView(
                 textView,
                 LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    LinearLayout.LayoutParams.MATCH_PARENT,
                     LinearLayout.LayoutParams.WRAP_CONTENT
-                )
+                ).also { it.weight = 1f; it.leftMargin = 8 }
             )
 
             val editText = EditText(this.context)
@@ -345,23 +411,35 @@ class MapFragment : BaseFragment(), MapFragmentContract.View, OnMapReadyCallback
             layout.addView(
                 editText,
                 LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    LinearLayout.LayoutParams.MATCH_PARENT,
                     LinearLayout.LayoutParams.WRAP_CONTENT
-                )
+                ).also { it.weight = 1f;it.rightMargin = 8 }
             )
         }
+        view.findViewById<TextView>(R.id.markerTitle).text = "$id"
+        view.findViewById<ScrollView>(R.id.scrollMarker).layoutParams =  LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.MATCH_PARENT,
+            LinearLayout.LayoutParams.WRAP_CONTENT
+        )
         AlertDialog.Builder(this.activity!!)
             .setTitle("")
             .setView(view)
+            .setNegativeButton("Отмена") { _, _ ->
+                Log.d("Hello", "1")
+            }
             .setPositiveButton("Сохранить") { _, _ ->
                 Log.d("Hello", "1")
             }
             .create().show()
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
+    override fun onDetach() {
+        disposable.clear()
         presenter.detach()
+        Log.d("Hello", "5")
+        mMap = null
+        super.onDetach()
     }
+
 }
 

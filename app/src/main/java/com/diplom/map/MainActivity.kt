@@ -1,7 +1,10 @@
 package com.diplom.map
 
 import android.Manifest
+import android.content.Context
 import android.content.pm.PackageManager
+import android.net.ConnectivityManager
+import android.net.NetworkInfo
 import android.os.Bundle
 import android.util.Log
 import android.view.Menu
@@ -21,6 +24,7 @@ import com.diplom.map.mvp.components.map.view.MapFragment
 import com.diplom.map.mvp.config.retrofit.GeoserverClient
 import com.diplom.map.utils.FileUtils
 import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.schedulers.Schedulers
 import kotlinx.android.synthetic.main.activity_main.*
 import java.io.File
@@ -35,6 +39,8 @@ class MainActivity : AppCompatActivity() {
 
     @Inject
     lateinit var layerPresenter: LayerVisibilityFragmentPresenter
+
+    private val disposable = CompositeDisposable()
 
     var toolbar: Toolbar? = null
     var server: MenuItem? = null
@@ -114,7 +120,11 @@ class MainActivity : AppCompatActivity() {
 
 
     fun getLayerNamesFromServer() {
-        geoserverClient.getApi()
+        if (!hasConnection(this)) {
+            Toast.makeText(this, "Отсутствует соединение с сервером", Toast.LENGTH_LONG).show()
+            return
+        }
+        disposable.add(geoserverClient.getApi()
             .getLayerNames()
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
@@ -131,20 +141,23 @@ class MainActivity : AppCompatActivity() {
                     .setNegativeButton("Отменить") { _, _ -> }
                     .setPositiveButton("Добавить") { dialog, _ ->
                         val selectedPosition = (dialog as AlertDialog).listView.checkedItemPosition
-                        val shapeName = it[selectedPosition].toLowerCase()
+                        val shapeName = it[selectedPosition]
                         downloadShapefileFromServer(shapeName)
                     }
                     .create()
                     .show()
             }
-            .doOnError { Log.d("Hello", "Error: ${it.message}") }
+            .doOnComplete { Toast.makeText(this, "Отсутствует соединение с сервером", Toast.LENGTH_LONG).show() }
+            .doOnError { Toast.makeText(this, "Отсутствует соединение с сервером", Toast.LENGTH_LONG).show() }
             .subscribe()
+        )
     }
 
     fun downloadShapefileFromServer(shapefileName: String) {
-        geoserverClient.getApi().getShapeFile("cite%3A$shapefileName")
+        disposable.add(geoserverClient.getApi().getShapeFile("cite:$shapefileName")
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
+            .doOnComplete {}
             .doOnSuccess { body ->
                 val zip = FileUtils.writeResponseBodyToDisk(shapefileName, body, this)
                 val directory = zip?.path?.substring(0, zip.path!!.lastIndexOf("."))
@@ -166,8 +179,27 @@ class MainActivity : AppCompatActivity() {
             }
 
             .subscribe()
+        )
     }
 
+    override fun onDestroy() {
+        super.onDestroy()
+        disposable.dispose()
+    }
+
+    fun hasConnection(context: Context): Boolean {
+        val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        var wifiInfo: NetworkInfo? = cm.getNetworkInfo(ConnectivityManager.TYPE_WIFI)
+        if (wifiInfo != null && wifiInfo.isConnected) {
+            return true
+        }
+        wifiInfo = cm.getNetworkInfo(ConnectivityManager.TYPE_MOBILE)
+        if (wifiInfo != null && wifiInfo.isConnected) {
+            return true
+        }
+        wifiInfo = cm.activeNetworkInfo
+        return wifiInfo != null && wifiInfo.isConnected
+    }
 }
 
 

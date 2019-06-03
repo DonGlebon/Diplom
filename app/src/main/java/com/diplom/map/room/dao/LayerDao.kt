@@ -16,6 +16,9 @@ interface LayerDao {
     @Query("SELECT uid FROM Layers WHERE filename = :filename")
     fun findLayerByName(filename: String): Maybe<Long>
 
+    @Query("UPDATE Layers set isVisible = :visible WHERE uid = :layerId")
+    fun updateLayerVisible(visible: Boolean, layerId: Long): Completable
+
     @Transaction
     @Query("SELECT uid,ZIndex,minZoom,maxZoom,GeometryType,themeId FROM layers")
     fun getDataLayers(): Single<List<LayerData>>

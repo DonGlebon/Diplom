@@ -71,8 +71,13 @@ class LayerRecyclerViewAdapter(private var itemList: List<LayerVisibility>, priv
         view.setOnVisibilityChangedListener(
             object :
                 ExpandableCardView.OnVisibilityChangedListener {
-                override fun VisibilityChanged(isVisible: Boolean) {
-                    Log.d("Hello", "Visibility: $isVisible")
+                override fun VisibilityChanged(isVisible: Boolean, id: Long) {
+                    disposable.add(
+                        db.layerDao().updateLayerVisible(isVisible, id)
+                            .subscribeOn(Schedulers.io())
+                            .observeOn(AndroidSchedulers.mainThread())
+                            .subscribe()
+                    )
                 }
             })
         view.setOnThemeChangeListener { layer, theme ->

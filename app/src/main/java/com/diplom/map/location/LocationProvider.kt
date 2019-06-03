@@ -63,8 +63,19 @@ class LocationProvider(private val Context: Context) {
             OnLocationChangeListener {
             override fun onLocationChange(locations: List<Location>?) {
                 locations ?: return
-                locationList.addAll(locations)
-                method(locationList)
+                if (locationList.isNotEmpty()) {
+                    val last = locationList.last()
+                    for (location in locations) {
+                        val distance = last.distanceTo(location)
+                        if (location.accuracy < 30f && (distance > last.accuracy || location.accuracy <= 10f)) {
+                            locationList.add(location)
+                            method(locationList)
+                        }
+                    }
+                } else if(locations[0].accuracy < 30f) {
+                    locationList.add(locations[0])
+                    method(locationList)
+                }
             }
         }
     }
