@@ -39,26 +39,7 @@ class MapFragmentPresenter : BasePresenter<MapFragmentContract.View>(), MapFragm
     }
 
     fun mapReady() {
-        Log.d("Hello", "Layers get")
-//        disposable.add(
-//            db.layerDao().getDataLayers()
-//                .subscribeOn(Schedulers.io())
-//                .map {
-//                    Log.d("Hello","Layers Succes")
-//                    val provider = LayersTileProvider()
-//                    for (layer in it)
-//                        provider.addLayer(layer)
-//                    provider
-//                }
-//                .observeOn(AndroidSchedulers.mainThread())
-//                .doOnSuccess {
-//                    Log.d("Hello","display")
-//                    if (it != null)
-//                        view?.addTileProvider(it)
-//                }
-//                .doOnError { Log.d("Hello", "MapReady1 error: ${it.message}") }
-//                .subscribe()
-//        )
+
         disposable.add(Observable.defer { Observable.just(db.featureDataDao().getDataLayers()) }
             .subscribeOn(Schedulers.newThread())
             .observeOn(AndroidSchedulers.mainThread())

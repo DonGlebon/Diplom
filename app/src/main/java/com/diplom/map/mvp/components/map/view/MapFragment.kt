@@ -24,6 +24,7 @@ import com.diplom.map.mvp.components.map.presenter.MapFragmentPresenter
 import com.diplom.map.utils.model.ESRITileProvider
 import com.google.android.gms.maps.*
 import com.google.android.gms.maps.model.*
+import io.reactivex.Single
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.schedulers.Schedulers
@@ -383,10 +384,11 @@ class MapFragment : BaseFragment(), MapFragmentContract.View, OnMapReadyCallback
         }
     }
 
-    private fun createDialog(id: Long, map: HashMap<String, String>) {
+    private fun createDialog(id: Long, featureMap: HashMap<String, String>) {
         val view =
             LayoutInflater.from(this.context).inflate(R.layout.marker_layout, null, false)
-        for (key in map.keys) {
+        val viewMap = HashMap<String, EditText>()
+        for (key in featureMap.keys) {
             val layout = LinearLayout(this.context)
             layout.orientation = LinearLayout.HORIZONTAL
             view.markerLayout.addView(
@@ -407,7 +409,8 @@ class MapFragment : BaseFragment(), MapFragmentContract.View, OnMapReadyCallback
             )
 
             val editText = EditText(this.context)
-            editText.setText(map[key])
+            viewMap[key] = editText
+            editText.setText(featureMap[key])
             layout.addView(
                 editText,
                 LinearLayout.LayoutParams(
@@ -417,7 +420,7 @@ class MapFragment : BaseFragment(), MapFragmentContract.View, OnMapReadyCallback
             )
         }
         view.findViewById<TextView>(R.id.markerTitle).text = "$id"
-        view.findViewById<ScrollView>(R.id.scrollMarker).layoutParams =  LinearLayout.LayoutParams(
+        view.findViewById<ScrollView>(R.id.scrollMarker).layoutParams = LinearLayout.LayoutParams(
             LinearLayout.LayoutParams.MATCH_PARENT,
             LinearLayout.LayoutParams.WRAP_CONTENT
         )
@@ -425,10 +428,16 @@ class MapFragment : BaseFragment(), MapFragmentContract.View, OnMapReadyCallback
             .setTitle("")
             .setView(view)
             .setNegativeButton("Отмена") { _, _ ->
-                Log.d("Hello", "1")
             }
             .setPositiveButton("Сохранить") { _, _ ->
-                Log.d("Hello", "1")
+                val dbMap = HashMap<String, String>()
+                for (key in featureMap.keys) {
+                    dbMap[key] = viewMap[key]!!.text.toString()
+                }
+                Single.defer { Single.just(presenter.db.featureStyleDao().updateFeature(id, dbMap)) }
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribeOn(Schedulers.io())
+                    .subscribe()
             }
             .create().show()
     }
