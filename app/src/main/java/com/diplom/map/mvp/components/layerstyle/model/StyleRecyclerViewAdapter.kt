@@ -1,8 +1,6 @@
 package com.diplom.map.mvp.components.layerstyle.model
 
 import android.graphics.drawable.ColorDrawable
-import android.text.Editable
-import android.text.TextWatcher
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -33,7 +31,6 @@ class StyleRecyclerViewAdapter(
     @Inject
     lateinit var db: AppDatabase
 
-    //   private val disposable = CompositeDisposable()
 
     init {
         App.get().injector.inject(this)
@@ -59,19 +56,6 @@ class StyleRecyclerViewAdapter(
             updateStyle(data[position])
             holder.stroke.setBackgroundColor(it)
         }
-        holder.strokeWidth.addTextChangedListener(object : TextWatcher {
-            override fun afterTextChanged(s: Editable?) {
-            }
-
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
-
-            }
-
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-
-            }
-
-        })
         holder.strokeWidth.onFocusChangeListener = View.OnFocusChangeListener { v, hasFocus ->
             if (!hasFocus) {
                 data[position].strokeWidth = holder.strokeWidth.text.toString().toFloat()

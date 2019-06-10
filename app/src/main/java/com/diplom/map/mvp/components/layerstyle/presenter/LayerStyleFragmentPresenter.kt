@@ -3,6 +3,7 @@ package com.diplom.map.mvp.components.layerstyle.presenter
 import com.diplom.map.mvp.App
 import com.diplom.map.mvp.abstracts.presenter.BasePresenter
 import com.diplom.map.mvp.components.layerstyle.contract.LayerStyleFragmentContract
+import com.diplom.map.mvp.components.layerstyle.model.LayerStyleModel
 import com.diplom.map.room.AppDatabase
 import com.diplom.map.room.data.ThemeStyleData
 import io.reactivex.Maybe
@@ -15,6 +16,7 @@ class LayerStyleFragmentPresenter : BasePresenter<LayerStyleFragmentContract.Vie
     @Inject
     lateinit var db: AppDatabase
 
+    val model = LayerStyleModel()
     val disposable = CompositeDisposable()
 
     init {
@@ -27,10 +29,6 @@ class LayerStyleFragmentPresenter : BasePresenter<LayerStyleFragmentContract.Vie
 
     fun getColumnNames(layername: String): Maybe<List<String>> {
         return db.layerDao().getColumnNamesByLayer(layername)
-    }
-
-    fun getColumnValues() {
-        db.layerDao()
     }
 
     fun getThemeValues(layername: String, columnname: String): Maybe<ThemeStyleData> {

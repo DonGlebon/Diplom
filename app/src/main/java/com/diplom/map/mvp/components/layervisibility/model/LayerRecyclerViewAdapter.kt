@@ -57,7 +57,6 @@ class LayerRecyclerViewAdapter(private var itemList: List<LayerVisibility>, priv
                     .subscribe()
                 )
             else {
-                Log.d("Hello", "Subscribe ${it.uid}")
                 disposable.add(db.layerDao().deleteLayer(it.uid)
                     .subscribeOn(Schedulers.io())
                     .observeOn(AndroidSchedulers.mainThread())

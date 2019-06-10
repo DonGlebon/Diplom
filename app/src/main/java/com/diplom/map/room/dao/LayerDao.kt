@@ -5,10 +5,7 @@ import com.diplom.map.room.data.*
 import com.diplom.map.room.entities.FeatureData
 import com.diplom.map.room.entities.Marker
 import com.diplom.map.room.entities.ThemeStyleValues
-import io.reactivex.Completable
-import io.reactivex.Flowable
-import io.reactivex.Maybe
-import io.reactivex.Single
+import io.reactivex.*
 
 @Dao
 interface LayerDao {
@@ -33,7 +30,7 @@ interface LayerDao {
 
     @Transaction
     @Query("SELECT * FROM Layers")
-    fun getLayers(): Flowable<List<LayerVisibility>>
+    fun getLayers(): Observable<List<LayerVisibility>>
 
     @Query("UPDATE Layers SET ZIndex = :zIndex,  minZoom = :minZoom, maxZoom = :maxZoom WHERE uid = :uid")
     fun updateLayerVisibility(uid: Long, zIndex: Int, minZoom: Int, maxZoom: Int): Completable

@@ -23,12 +23,7 @@ class MapFragmentPresenter : BasePresenter<MapFragmentContract.View>(), MapFragm
     override fun getLayerDataById(uid: Long): Single<List<FDData>> {
         return db.layerDao().getFeatureData(uid)
     }
-
-    override fun attach(view: MapFragmentContract.View) {
-        super.attach(view)
-     //   disposable = CompositeDisposable()
-    }
-
+    
     @Inject
     lateinit var db: AppDatabase
 
